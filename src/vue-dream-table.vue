@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="main-wrapper">
     <!-- <slot name="title">{{ options.title }}</slot> -->
     <super-modal ref="super-modal" :items="largestRowItems" @create="create" />
     <show-more ref="show-more" />
@@ -8,33 +8,60 @@
         <button class="create_btn-item" @click="createItemHandler">Add</button>
       </div>
     </slot>
-    <table>
+    <table class="dream_table-main">
       <thead>
         <tr>
-          <th v-for="item in largestRowItems" :key="item">{{ item }}</th>
-          <th>
+          <th
+            v-for="item in largestRowItems"
+            :key="item"
+            :class="{ none: defaultHiddenItems.includes(item) }"
+          >
+            {{ item }}
+          </th>
+          <th class="table-actions">
             <button @click="sortBy('name')">Actions</button>
+            <span v-if="hiddenItems" @click="showHiddenItemsPopup">...</span>
           </th>
         </tr>
       </thead>
       <tbody class="main-table">
         <template v-if="allData.length">
-          <tr v-for="(item, key) in Object.values(allData)" :key="key">
-            <td
-              v-for="(i, key) in item"
-              :key="key"
-              :class="{ 'more_info-btn': typeof i === 'object' }"
-            >
-              <!-- if data includes object show it in popup modal -->
-              {{ typeof i === "object" ? Object.values(i)[0] : i }}
-              <button
-                class="show_more-info"
-                v-if="typeof i === 'object'"
-                @click="showMoreHandler"
+          <tr v-for="(item, key) in allData" :key="key">
+            <template>
+              <td
+                v-for="(i, key) in Object.keys(item)"
+                :key="key"
+                :class="{
+                  'more_info-btn':
+                    typeof item[i] === 'object' && item[i] !== null,
+                  none: defaultHiddenItems.includes(i),
+                }"
+                class="dream-table-td"
               >
-                show more
-              </button>
-            </td>
+                <!-- if field is object show it in popup modal -->
+                <template
+                  v-if="typeof item[i] === 'object' && item[i] !== null"
+                >
+                  [Object object]
+                  <button class="show_more-info" @click="showMoreHandler">
+                    show more
+                  </button>
+                </template>
+                <template
+                  v-else-if="item[i] == null || typeof item[i] == undefined"
+                >
+                  <p>empty</p>
+                </template>
+                <template v-else>
+                  <template v-if="image">
+                    <img :src="image" alt="image" class="dream-image" />
+                  </template>
+                  <template v-else>
+                    {{ item[i] }}
+                  </template>
+                </template>
+              </td>
+            </template>
             <td>
               <button @click="remove(item)">Remove</button>
             </td>
@@ -50,7 +77,7 @@
         </template>
         <template v-else>
           <tr>
-            <td colspan="3">No Data</td>
+            <td colspan="3">No Data {{ errors }}</td>
           </tr>
         </template>
       </tbody>
@@ -76,6 +103,7 @@ export default /*#__PURE__*/ {
     "title",
     "loaderImg",
     "dataName",
+    "hiddenItems",
   ],
   // props: {
   //   options: {
@@ -128,6 +156,9 @@ export default /*#__PURE__*/ {
     return {
       allData: [],
       isLoading: false,
+      image: "",
+      errors: "",
+      defaultHiddenItems: ["created_at", "updated_at"],
     };
   },
 
@@ -135,7 +166,8 @@ export default /*#__PURE__*/ {
     largestRowItems() {
       if (this.allData.length) {
         const uniqueItems = this.allData.reduce((a, b) => {
-          Object.assign(b, a);
+          // Object.assign(b, a);
+          JSON.parse(JSON.stringify(b));
           return b;
         }, {});
         return Object.keys(uniqueItems);
@@ -146,12 +178,16 @@ export default /*#__PURE__*/ {
   },
 
   methods: {
+    showHiddenItemsPopup() {
+      this.$refs["hidden-items"].show();
+    },
+
     showMoreHandler() {
       this.$refs["show-more"].show();
     },
 
     create(a) {
-      axios.post(this.createUrl, { a }).then(() => {
+      axios.post("http://localhost:3000/api/category", a).then(() => {
         this.getData();
       });
     },
@@ -172,14 +208,22 @@ export default /*#__PURE__*/ {
     getData() {
       this.isLoading = true;
       axios
-        .get(this.getUrl)
+        // .get("http://git.inoclouds.com:4111/user/projects")
+        .get("https://jsonplaceholder.typicode.com/users")
+        // .get("http://crm.masterpharm.am:6661/cli?branch_id=2")
+        // .get("https://randomuser.me/api/")
+        // .get("http://localhost:3000/api/category")
+        // .get(
+        //   "https://conduit.productionready.io/api/articles?limit=10&offset=0"
+        // )
         .then((response) => {
           this.isLoading = false;
           // const dataname = this.dataName.join(".");
-          this.allData = response.data.message;
+          this.allData = response.data;
         })
         .catch((err) => {
-          console.log(err, "errrrrr88");
+          console.log(err.message, "err");
+          this.errors = err.message;
           this.isLoading = false;
         });
     },
@@ -187,30 +231,78 @@ export default /*#__PURE__*/ {
 
   mounted() {
     axios.interceptors.request.use((config) => {
-      const token = this.token;
-      const authorizationToken = token ? token : "";
-      config.headers.Authorization = authorizationToken;
+      // const token = this.token;
+      // const authorizationToken = token ? token : "";
+      config.headers.Authorization =
+        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNjMxNDQ0NzQxLCJleHAiOjE2MzUwNDQ3NDF9.Bs5ftW2MVLalfZSxZdJ8DOpc44aUa22EN8HtrWdc2_oY95Rc4WGBaDrXKMIr46spW7YSN4Zxs661m6KXx-x-KQ";
       return config;
     });
-    console.log("this token", this.token);
-    axios
-      .get("https://jsonplaceholder.typicode.com/users")
-      .then((res) => {
-        console.log(res);
-      })
-      .catch((err) => {
-        console.log(err, "errrrrrrr");
-      });
+
+    // setTimeout(() => {
+    //   (function(window) {
+    //     var errors = {};
+
+    //     window.checkImage = function(url, success, failure) {
+    //       var img = new Image(), // the
+    //         loaded = false,
+    //         errored = false;
+
+    //       img.onload = function() {
+    //         if (loaded) {
+    //           return;
+    //         }
+
+    //         loaded = true;
+
+    //         if (success && success.call) {
+    //           success.call(img);
+    //         }
+    //       };
+
+    //       img.onerror = function() {
+    //         if (errored) {
+    //           return;
+    //         }
+
+    //         errors[url] = errored = true;
+
+    //         if (failure && failure.call) {
+    //           failure.call(img);
+    //         }
+    //       };
+
+    //       img.src = url;
+    //       this.image = img.src;
+    //       if (errors[url]) {
+    //         img.onerror.call(img);
+    //       }
+
+    //       if (img.complete) {
+    //         img.onload.call(img);
+    //       }
+    //     };
+    //     window.checkImage("https://via.placeholder.com/600/92c952");
+    //   })(this);
+    // }, 5000);
+
     this.getData();
   },
 };
 </script>
 
 <style scoped>
-table {
+.main-wrapper {
+}
+
+.dream_table-main {
   font-family: arial, sans-serif;
-  border-collapse: collapse;
   width: 100%;
+  border-collapse: collapse;
+}
+table tbody {
+}
+
+table thead {
 }
 
 td,
@@ -218,6 +310,9 @@ th {
   border: 1px solid #dddddd;
   text-align: left;
   padding: 8px;
+}
+
+td {
 }
 
 tr:nth-child(even) {
@@ -235,8 +330,6 @@ tr:nth-child(even) {
 }
 
 .more_info-btn {
-  display: flex;
-  justify-content: space-between;
 }
 
 .create-btn {
@@ -249,6 +342,24 @@ tr:nth-child(even) {
   background: #dddddd;
   border: 1px solid black;
   padding: 4px 8px;
+  cursor: pointer;
+}
+
+.dream-image {
+  width: 50px;
+  height: 50px;
+}
+
+.none {
+  display: none;
+}
+
+.table-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.table-actions span {
   cursor: pointer;
 }
 </style>

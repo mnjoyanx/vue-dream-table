@@ -1,6 +1,6 @@
 {
   "name": "vue-dream-table",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "description": "",
   "main": "dist/vue-dream-table.ssr.js",
   "browser": "dist/vue-dream-table.esm.js",
