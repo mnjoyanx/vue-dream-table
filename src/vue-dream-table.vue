@@ -20,7 +20,20 @@
           </th>
           <th class="table-actions">
             <button @click="sortBy('name')">Actions</button>
-            <span v-if="hiddenItems" @click="showHiddenItemsPopup">...</span>
+            <span @click="showHiddenItemsPopup">...</span>
+            <hidden-items-popup
+              ref="hidden-items"
+              v-if="isHiddenByDefault || chosenHiddenItemsByDefault.length > 1"
+              :items="
+                hiddenItemsByDefault.length
+                  ? hiddenItemsByDefault
+                  : isHiddenByDefault
+                  ? hiddenitems
+                  : !isHiddenByDefault && chosenHiddenItemsByDefault.length > 1
+                  ? chosenHiddenItemsByDefault
+                  : defaultHiddenItems
+              "
+            />
           </th>
         </tr>
       </thead>
@@ -90,6 +103,7 @@ const axios = require("axios");
 
 import SuperModal from "./super-modal.vue";
 import ShowMore from "./show-more.vue";
+import HiddenItemsPopup from "./HIddenItemsPopup";
 
 export default /*#__PURE__*/ {
   name: "VueDreamTable", // vue component name
@@ -103,7 +117,9 @@ export default /*#__PURE__*/ {
     "title",
     "loaderImg",
     "dataName",
-    "hiddenItems",
+    "isHiddenByDefault",
+    "hiddenItemsByDefault",
+    "chosenHiddenItemsByDefault",
   ],
   // props: {
   //   options: {
@@ -150,6 +166,7 @@ export default /*#__PURE__*/ {
   components: {
     SuperModal,
     ShowMore,
+    HiddenItemsPopup,
   },
 
   data() {
@@ -159,6 +176,7 @@ export default /*#__PURE__*/ {
       image: "",
       errors: "",
       defaultHiddenItems: ["created_at", "updated_at"],
+      hiddenitems: ["username", "email"],
     };
   },
 
@@ -292,6 +310,7 @@ export default /*#__PURE__*/ {
 
 <style scoped>
 .main-wrapper {
+  overflow: hidden;
 }
 
 .dream_table-main {
@@ -357,6 +376,7 @@ tr:nth-child(even) {
 .table-actions {
   display: flex;
   justify-content: space-between;
+  position: relative;
 }
 
 .table-actions span {
