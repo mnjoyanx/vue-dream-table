@@ -23,7 +23,39 @@ npm install vue-dream-table
 ## Usage
 
 ```sh
-npm run serve
+<template>
+<vue-dream-table
+      :title="title"
+      :getUrl="getUrl"
+      :createUrl="createUrl"
+      :dataName="dataName"
+      :loaderImg="loaderImg"
+      :isHiddenByDefault="isHiddenByDefault"
+      :hiddenItemsByDefault="hiddenItemsByDefault"
+      :chosenHiddenItemsByDefault="chosenHiddenItemsByDefault"
+      :token="token"
+    />
+</template>
+
+<script>
+import VueDreamTable froom "vue-dream-table";
+
+export default {
+    data() {
+    return {
+      title: "Posts",
+      getUrl: "https://jsonplaceholder.typicode.com/users",
+      createUrl: "https://jsonplaceholder.typicode.com/users",
+      dataName: [],
+      isHiddenByDefault: true,
+      hiddenItemsByDefault: [],
+      chosenHiddenItemsByDefault: [],
+      token:
+        "eyJhbGciOiJSUzI1NiIsInR5svcCI6IkpXVCJ9.sjv7weIl",
+    };
+  },
+}
+</script>
 ```
 
 ## Author
@@ -36,5 +68,3 @@ npm run serve
 
 Give a ⭐️ if this project helped you!
 
-***
-_This README was generated with ❤️ by [readme-md-generator](https://github.com/kefranabg/readme-md-generator)_

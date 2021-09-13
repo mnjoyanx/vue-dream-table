@@ -2,9 +2,13 @@
   <div>
     <div class="popup-fixed" v-if="isVisible" @click="isVisible = false"></div>
     <div @click.stop class="popup-content" v-if="isVisible">
-      <div class="main-container">
+      <div class="main-containr">
         <div class="popup-header">
-          <div v-for="(item, key) in items" :key="key">
+          <div
+            v-for="(item, key) in items"
+            :key="key"
+            class="hidden_popup-items"
+          >
             <label :for="item">
               <input type="checkbox" :id="item" /> {{ item }}
             </label>
@@ -67,5 +71,14 @@ export default {
 
 .main-container {
   padding: 10px;
+}
+
+.hidden_popup-items {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.hidden_popup-items:hover {
+  background: #f5f5f5;
 }
 </style>
