@@ -11,11 +11,20 @@
       :editable="true"
       :deletable="true"
       :actionAsIcon="true"
+      :dataName="['message']"
       :createRequestParam="'data'"
       :deleteRequest="{
         url: 'https://jsonplaceholder.typicode.com/posts',
         method: 'delete',
         deleteRequestParam: 'id',
+      }"
+      :filters="{
+        search: {
+          searchable: true,
+          placeholder: 'Search',
+          searchBy: 'name',
+          key: 'search',
+        },
       }"
       @showMoreHandler="showMore"
       @createHandler="createHandler"

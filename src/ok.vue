@@ -1,10 +1,18 @@
 <template>
   <div class="main-wrapper">
     <h2 v-if="title" class="dream_table-title">{{ title }}</h2>
-    <div class="create-btn" v-if="allowAddNewItem">
-      <button class="create_btn-item" @click="createItemHandler">Add</button>
+    <div class="filter-main d-flex justify-between">
+      <div>
+        <search-bar
+          v-if="filters.search.searchable"
+          :searchParams="filters.search"
+          @searchHandler="searchHandler"
+        />
+      </div>
+      <div class="create-btn" v-if="allowAddNewItem">
+        <button class="create_btn-item" @click="createItemHandler">Add</button>
+      </div>
     </div>
-
     <table class="dream_table-main">
       <thead>
         <tr>
@@ -120,6 +128,7 @@ const axios = require("axios");
 import HiddenItemsPopup from "./HIddenItemsPopup";
 import EditItem from "./edit-item.vue";
 import RemoveItem from "./remove-item.vue";
+import SearchBar from "./search-bar";
 
 export default {
   name: "VueDreamTable",
@@ -209,12 +218,37 @@ export default {
       type: Object,
       required: false,
     },
+
+    filters: {
+      type: Object,
+      default: () => {
+        return {
+          search: {
+            searchable: true,
+            placeholder: "Search",
+            searchBy: "name",
+          },
+        };
+      },
+    },
+
+    // updatedRequest: {
+    //   type: Object,
+    //   default: () => {
+    //     return {
+    //       crud: {
+    //         uri: "hello update",
+    //       },
+    //     };
+    //   },
+    // },
   },
 
   components: {
     HiddenItemsPopup,
     EditItem,
     RemoveItem,
+    SearchBar,
   },
 
   data() {
@@ -242,6 +276,30 @@ export default {
   },
 
   methods: {
+    searchHandler(value) {
+      const { search } = this.filters;
+      const params = search.key
+        ? { [search.key]: JSON.stringify({ [search.searchBy]: value }) }
+        : { [search.searchBy]: value };
+      this.$router.push({ query: params });
+      console.log(this.$router);
+      axios
+        .get("http://git.inoclouds.com:4111/user/projects", {
+          params,
+        })
+        .then((response) => {
+          if (this.dataName) {
+            const dataname = this.dataName.join(".");
+            this.allData = response.data[dataname];
+          } else {
+            this.allData = response.data;
+          }
+        });
+      // this.allData = this.allData.filter((item) => {
+      //   return item[this.filters.search.searchBy].includes(value);
+      // });
+    },
+
     changeVisibilityHandler(item) {
       if (this.hiddenitems.includes(item)) {
         this.hiddenitems = this.hiddenitems.filter((i) => i !== item);
@@ -306,8 +364,8 @@ export default {
         this.isLoading = true;
       }
       axios
-        // .get("http://git.inoclouds.com:4111/user/projects")
-        .get(this.getUrl)
+        .get("http://git.inoclouds.com:4111/user/projects")
+        // .get(this.getUrl)
         // .get("http://crm.masterpharm.am:6661/cli?branch_id=2")
         // .get("https://randomuser.me/api/")
         // .get("http://localhost:3000/api/category")
@@ -316,7 +374,7 @@ export default {
         // )
         .then((response) => {
           this.isLoading = false;
-          if (this.dataName.length) {
+          if (this.dataName) {
             const dataname = this.dataName.join(".");
             this.allData = response.data[dataname];
           } else {
@@ -334,7 +392,6 @@ export default {
     if (this.$props.hiddenItemsByDefault.length) {
       this.hiddenitems = this.$props.hiddenItemsByDefault;
     }
-
     if (this.isLoad) {
       this.isLoading = this.isLoad;
     }
@@ -346,7 +403,9 @@ export default {
       // const authorizationToken = token ? token : "";
       // config.headers.Authorization =
       //   "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNjMxNDQ0NzQxLCJleHAiOjE2MzUwNDQ3NDF9.Bs5ftW2MVLalfZSxZdJ8DOpc44aUa22EN8HtrWdc2_oY95Rc4WGBaDrXKMIr46spW7YSN4Zxs661m6KXx-x-KQ";
-      config.headers[this.headerAuthorizationType] = this.token || "";
+      config.headers.Authorization =
+        this.token ||
+        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNjMxNjQzOTk2LCJleHAiOjE2MzUyNDM5OTZ9.MPtXIAU_1R8iIe7gbRf1anAwCpUb6L734RCgbKfquUSFcopk4wXaG1bc291iLv96vgagQwnozW0SzyCLq-eBbQ";
       return config;
     });
 
@@ -459,7 +518,6 @@ tr:nth-child(even) {
 .create-btn {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 10px;
 }
 
 .create_btn-item {
@@ -516,5 +574,13 @@ tr:nth-child(even) {
 
 .action_is-visible {
   display: none;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.filter-main {
+  margin-bottom: 10px;
 }
 </style>
