@@ -10,7 +10,12 @@
             class="hidden_popup-items"
           >
             <label :for="item">
-              <input type="checkbox" :id="item" /> {{ item }}
+              <input
+                type="checkbox"
+                :id="item"
+                @change="changeItemHandler(item, $event)"
+              />
+              {{ item }}
             </label>
           </div>
         </div>
@@ -37,6 +42,10 @@ export default {
   },
 
   methods: {
+    changeItemHandler(item) {
+      this.$emit("changeVisibility", item);
+    },
+
     show() {
       this.isVisible = true;
     },
@@ -75,6 +84,10 @@ export default {
 
 .hidden_popup-items {
   padding: 10px;
+  cursor: pointer;
+}
+
+label {
   cursor: pointer;
 }
 

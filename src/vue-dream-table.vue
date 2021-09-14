@@ -1,11 +1,20 @@
 <template>
   <div>
     <hello-vue
-      getUrl="https://jsonplaceholder.typicode.com/posts"
       :showPopupToCheckHiddenItems="true"
-      :hiddenItemsByDefault="['body']"
+      :hiddenItemsByDefault="['body', 'username']"
       :allowAddNewItem="true"
       :actions="true"
+      :deletable="true"
+      :editable="true"
+      :actionAsIcon="true"
+      :addItemFields="['email', 'username']"
+      :createRequestParam="'data'"
+      :deleteRequest="{
+        url: 'https://jsonplaceholder.typicode.com/posts',
+        method: 'delete',
+        deleteRequestParam: 'id',
+      }"
     />
   </div>
 </template>

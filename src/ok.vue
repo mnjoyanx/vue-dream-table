@@ -1,12 +1,11 @@
 <template>
   <div class="main-wrapper">
     <h2 v-if="title" class="dream_table-title">{{ title }}</h2>
-    <super-modal ref="super-modal" :items="largestRowItems" @create="create" />
+    <super-modal ref="super-modal" @create="create" />
     <show-more ref="show-more" />
     <div class="create-btn" v-if="allowAddNewItem">
       <button class="create_btn-item" @click="createItemHandler">Add</button>
     </div>
-    {{ $props }}
     <table class="dream_table-main">
       <thead>
         <tr>
@@ -14,15 +13,13 @@
             v-for="item in largestRowItems"
             :key="item"
             :class="{
-              none:
-                hiddenitems.includes(item) ||
-                hiddenItemsByDefault.includes(item),
+              none: hiddenitems.includes(item),
             }"
           >
             {{ item }}
           </th>
           <th class="table-actions">
-            <button @click="sortBy('name')" v-if="actions">Actions</button>
+            <div @click="sortBy('name')" v-if="actions">Actions</div>
             <div
               :class="{
                 'hidden_items-popup': !showPopupToCheckHiddenItems,
@@ -39,6 +36,7 @@
                     ? hiddenItemsByDefault
                     : hiddenitems
                 "
+                @changeVisibility="changeVisibilityHandler"
               />
             </div>
           </th>
@@ -54,8 +52,7 @@
                 :class="{
                   'more_info-btn':
                     typeof item[i] === 'object' && item[i] !== null,
-                  none:
-                    hiddenitems.includes(i) || hiddenItemsByDefault.includes(i),
+                  none: hiddenitems.includes(i),
                 }"
                 class="dream-table-td"
               >
@@ -84,11 +81,14 @@
               </td>
             </template>
             <td class="d-flex">
-              <div class="edit_item-action">
-                <edit-item @edit="edit(item)" />
+              <div class="edit_item-action" v-if="editable">
+                <edit-item @edit="edit(item)" :actionAsIcon="actionAsIcon" />
               </div>
-              <div>
-                <remove-item @remove="remove(item)" />
+              <div v-if="deletable">
+                <remove-item
+                  @remove="remove(item)"
+                  :actionAsIcon="actionAsIcon"
+                />
               </div>
             </td>
           </tr>
@@ -161,7 +161,7 @@ export default {
 
     hiddenItemsByDefault: {
       type: Array,
-      default: () => [],
+      default: () => ["created_at", "updated_at"],
     },
 
     showPopupToCheckHiddenItems: {
@@ -182,6 +182,37 @@ export default {
     allowAddNewItem: {
       type: Boolean,
       default: () => false,
+    },
+
+    editable: {
+      type: Boolean,
+      default: () => true,
+    },
+
+    deletable: {
+      type: Boolean,
+      default: () => true,
+    },
+
+    addItemFields: {
+      type: Array,
+      default: () => [],
+      required: false,
+    },
+
+    createRequestParam: {
+      type: String,
+      required: false,
+    },
+
+    actionAsIcon: {
+      type: Boolean,
+      default: () => false,
+    },
+
+    deleteRequest: {
+      type: Object,
+      required: false,
     },
   },
 
@@ -218,6 +249,16 @@ export default {
   },
 
   methods: {
+    changeVisibilityHandler(item) {
+      if (this.hiddenitems.includes(item)) {
+        this.hiddenitems = this.hiddenitems.filter((i) => i !== item);
+      } else {
+        this.hiddenitems.push(item);
+      }
+
+      console.log(this.hiddenitems, 9999999);
+    },
+
     showHiddenItemsPopup() {
       this.$refs["hidden-items"].show();
     },
@@ -226,15 +267,21 @@ export default {
       this.$refs["show-more"].show();
     },
 
-    create(a) {
-      axios.post(this.createUrl, a).then(() => {
-        this.getData();
-      });
+    create(data) {
+      axios
+        .post(
+          this.createUrl,
+          this.createRequestParam ? { [this.createRequestParam]: data } : data
+        )
+        .then(() => {
+          this.getData();
+        });
     },
 
     createItemHandler() {
-      this.$emit("create", "ok");
-      this.$refs["super-modal"].show(this.largestRowItems);
+      this.$refs["super-modal"].show(
+        this.addItemFields.length ? this.addItemFields : this.largestRowItems
+      );
     },
 
     sortBy() {
@@ -246,7 +293,33 @@ export default {
     },
 
     remove(item) {
-      return "remove";
+      this.deleteRequest.method = this.deleteRequest.method.toUpperCase();
+      if (this.deleteRequest.method === "DELETE") {
+        axios
+          .delete(
+            this.deleteRequest.url +
+              "/" +
+              item[this.deleteRequest.deleteRequestParam]
+          )
+          .then(() => {
+            this.getData();
+          })
+          .catch((err) => {
+            this.errors = err;
+          });
+      } else {
+        axios
+          .post(this.deleteRequest.url, {
+            [this.deleteRequest.deleteRequestParam]:
+              item[this.deleteRequest.deleteRequestParam],
+          })
+          .then(() => {
+            this.getData();
+          })
+          .catch((err) => {
+            this.errors = err;
+          });
+      }
     },
 
     getData() {
@@ -277,7 +350,15 @@ export default {
     },
   },
 
+  created() {
+    if (this.$props.hiddenItemsByDefault.length) {
+      this.hiddenitems = this.$props.hiddenItemsByDefault;
+    }
+    console.log("created", this.$props.hiddenItemsByDefault);
+  },
+
   mounted() {
+    console.log(this.hiddenItemsByDefault, "defa");
     axios.interceptors.request.use((config) => {
       // const token = this.token;
       // const authorizationToken = token ? token : "";

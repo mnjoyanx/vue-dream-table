@@ -4,7 +4,7 @@
       <div class="super_modal-main" v-if="isVisible" @click="isVisible = false">
         <div class="super_modal-content" @click.stop>
           <div class="container-main">
-            <p>title</p>
+            <h3>Create</h3>
             <template v-if="fields.length">
               <div
                 v-for="(item, key) in fields"
@@ -72,6 +72,7 @@ export default {
     },
 
     show(fields) {
+      console.log(fields, "efefef");
       // property fields are titles of table
       this.isVisible = true;
       this.fields = fields;
