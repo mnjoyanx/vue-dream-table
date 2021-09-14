@@ -29,30 +29,63 @@ npm install vue-dream-table
       :getUrl="getUrl"
       :createUrl="createUrl"
       :dataName="dataName"
+      :isLoad="isLoad"
       :loaderImg="loaderImg"
       :isHiddenByDefault="isHiddenByDefault"
-      :hiddenItemsByDefault="hiddenItemsByDefault"
-      :chosenHiddenItemsByDefault="chosenHiddenItemsByDefault"
-      :token="token"
+      :allowAddNewItem="allowAddNewItem"
+      :addItemsFields="addItemsFields"
+      :createRequestParam="createRequestParam"
+      :actions="actions"
+      :deletable="deletable"
+      :deleteRequest="deleteRequest"
+      :actionAsIcon="actionAsIcon"
+      @showMoreHandler="showMoreHandler"
+      @createHandler="createHandler"
+      @editHandler="editHandler"
     />
 </template>
 
 <script>
-import VueDreamTable froom "vue-dream-table";
+import VueDreamTable from "vue-dream-table";
 
 export default {
     data() {
     return {
-      title: "Users",
-      getUrl: "https://jsonplaceholder.typicode.com/users",
-      createUrl: "https://jsonplaceholder.typicode.com/users",
+      title: 'Users',
+      getUrl: 'https://jsonplaceholder.typicode.com/users',
+      createUrl: 'https://jsonplaceholder.typicode.com/users',
       dataName: [],
       isHiddenByDefault: true,
       hiddenItemsByDefault: ['username', 'password'],
-      loaderImg: '',
-      
+      isLoad: true,
+      loaderImg: 'https://c.tenor.com/I6kN-6X7nhAAAAAj/loading-buffering.gif',
+      allowAddNewItem: true,
+      addItemsFields: ['email', 'username'],
+      createRequestParam: 'data', 
+      actions: true,
+      deletable: true,
+      deleteRequest: {
+        ur: 'https://jsonplaceholder.typicode.com/posts',
+        method: 'delete',
+        deleteRequestParam: 'id'
+      },
+      actionAsIcon: true,
     };
   },
+
+  methods: {
+    showMoreHandler(data) {
+      // do smth
+    },
+
+    createHandler(data) {
+      // do smth
+    }
+
+    editHandler(data) {
+      // do smth
+    }
+  }
 }
 </script>
 ```

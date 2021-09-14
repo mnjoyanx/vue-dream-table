@@ -1,7 +1,7 @@
 <template>
   <div>
     <template v-if="actionAsIcon">
-      <trash class="trash" />
+      <trash class="trash-icon" @click="remove" />
       <i class="fa fa-user" />
     </template>
     <template v-else>
@@ -39,8 +39,9 @@ export default {
 .remove-icon {
   cursor: pointer;
 }
-.trash {
+.trash-icon {
   color: red;
+  cursor: pointer;
   font-size: 15px;
 }
 </style>

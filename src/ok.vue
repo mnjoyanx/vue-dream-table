@@ -1,11 +1,10 @@
 <template>
   <div class="main-wrapper">
     <h2 v-if="title" class="dream_table-title">{{ title }}</h2>
-    <super-modal ref="super-modal" @create="create" />
-    <show-more ref="show-more" />
     <div class="create-btn" v-if="allowAddNewItem">
       <button class="create_btn-item" @click="createItemHandler">Add</button>
     </div>
+
     <table class="dream_table-main">
       <thead>
         <tr>
@@ -19,7 +18,7 @@
             {{ item }}
           </th>
           <th class="table-actions">
-            <div @click="sortBy('name')" v-if="actions">Actions</div>
+            <div @click="sortBy('name')" v-if="actions"></div>
             <div
               :class="{
                 'hidden_items-popup': !showPopupToCheckHiddenItems,
@@ -42,7 +41,7 @@
           </th>
         </tr>
       </thead>
-      <tbody class="main-table">
+      <tbody class="main-table" :class="{ 'loading-wrapper': isLoading }">
         <template v-if="allData.length">
           <tr v-for="(item, key) in allData" :key="key">
             <template>
@@ -60,8 +59,10 @@
                 <template
                   v-if="typeof item[i] === 'object' && item[i] !== null"
                 >
-                  [Object object]
-                  <button class="show_more-info" @click="showMoreHandler">
+                  <button
+                    class="show_more-info"
+                    @click="showMoreHandler(item, i)"
+                  >
                     show more
                   </button>
                 </template>
@@ -81,10 +82,13 @@
               </td>
             </template>
             <td class="d-flex">
-              <div class="edit_item-action" v-if="editable">
+              <div
+                class="edit_item-action"
+                :class="{ 'action_is-visible': !editable || !actions }"
+              >
                 <edit-item @edit="edit(item)" :actionAsIcon="actionAsIcon" />
               </div>
-              <div v-if="deletable">
+              <div :class="{ 'action_is-visible': !deletable || !actions }">
                 <remove-item
                   @remove="remove(item)"
                   :actionAsIcon="actionAsIcon"
@@ -93,13 +97,12 @@
             </td>
           </tr>
         </template>
+
         <template v-else-if="isLoading">
-          <tr>
-            <td colspan="100">
-              <img :src="loaderImg" v-if="loaderImg" class="image-center" />
-              <div class="loading" v-else>Loading...</div>
-            </td>
-          </tr>
+          <div class="loading-wrapper">
+            <img :src="loaderImg" v-if="loaderImg" class="image-center" />
+            <div class="loading" v-else>Loading...</div>
+          </div>
         </template>
         <template v-else>
           <tr>
@@ -114,8 +117,6 @@
 <script>
 const axios = require("axios");
 
-import SuperModal from "./super-modal.vue";
-import ShowMore from "./show-more.vue";
 import HiddenItemsPopup from "./HIddenItemsPopup";
 import EditItem from "./edit-item.vue";
 import RemoveItem from "./remove-item.vue";
@@ -142,6 +143,11 @@ export default {
     title: {
       type: String,
       required: false,
+    },
+
+    isLoad: {
+      type: Boolean,
+      default: false,
     },
 
     loaderImg: {
@@ -194,17 +200,6 @@ export default {
       default: () => true,
     },
 
-    addItemFields: {
-      type: Array,
-      default: () => [],
-      required: false,
-    },
-
-    createRequestParam: {
-      type: String,
-      required: false,
-    },
-
     actionAsIcon: {
       type: Boolean,
       default: () => false,
@@ -217,8 +212,6 @@ export default {
   },
 
   components: {
-    SuperModal,
-    ShowMore,
     HiddenItemsPopup,
     EditItem,
     RemoveItem,
@@ -255,33 +248,19 @@ export default {
       } else {
         this.hiddenitems.push(item);
       }
-
-      console.log(this.hiddenitems, 9999999);
     },
 
     showHiddenItemsPopup() {
       this.$refs["hidden-items"].show();
     },
 
-    showMoreHandler() {
-      this.$refs["show-more"].show();
-    },
-
-    create(data) {
-      axios
-        .post(
-          this.createUrl,
-          this.createRequestParam ? { [this.createRequestParam]: data } : data
-        )
-        .then(() => {
-          this.getData();
-        });
+    showMoreHandler(item, i) {
+      // this.$refs["show-more"].show();
+      this.$emit("showMoreHandler", { data: item, item: i });
     },
 
     createItemHandler() {
-      this.$refs["super-modal"].show(
-        this.addItemFields.length ? this.addItemFields : this.largestRowItems
-      );
+      this.$emit("createHandler", this.largestRowItems);
     },
 
     sortBy() {
@@ -289,7 +268,7 @@ export default {
     },
 
     edit(item) {
-      return "edit";
+      this.$emit("editHandler", item);
     },
 
     remove(item) {
@@ -323,7 +302,9 @@ export default {
     },
 
     getData() {
-      this.isLoading = true;
+      if (this.isLoading) {
+        this.isLoading = true;
+      }
       axios
         // .get("http://git.inoclouds.com:4111/user/projects")
         .get(this.getUrl)
@@ -343,7 +324,6 @@ export default {
           }
         })
         .catch((err) => {
-          console.log(err.message, "err");
           this.errors = err.message;
           this.isLoading = false;
         });
@@ -354,11 +334,13 @@ export default {
     if (this.$props.hiddenItemsByDefault.length) {
       this.hiddenitems = this.$props.hiddenItemsByDefault;
     }
-    console.log("created", this.$props.hiddenItemsByDefault);
+
+    if (this.isLoad) {
+      this.isLoading = this.isLoad;
+    }
   },
 
   mounted() {
-    console.log(this.hiddenItemsByDefault, "defa");
     axios.interceptors.request.use((config) => {
       // const token = this.token;
       // const authorizationToken = token ? token : "";
@@ -415,7 +397,6 @@ export default {
     //   })(this);
     // }, 5000);
 
-    console.log(this.$props, "props");
     this.getData();
   },
 };
@@ -509,6 +490,14 @@ tr:nth-child(even) {
 
 .image-center {
   text-align: center;
+  width: 25%;
+  margin-top: 30px;
+}
+
+.loading-wrapper {
+  display: flex;
+  justify-content: center;
+  text-align: center;
 }
 
 .hidden_items-popup {
@@ -523,5 +512,9 @@ tr:nth-child(even) {
 
 .edit_item-action {
   margin-right: 5px;
+}
+
+.action_is-visible {
+  display: none;
 }
 </style>

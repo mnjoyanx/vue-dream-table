@@ -1,11 +1,11 @@
 {
   "name": "vue-dream-table",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "description": "",
   "main": "dist/vue-dream-table.ssr.js",
   "browser": "dist/vue-dream-table.esm.js",
   "module": "dist/vue-dream-table.esm.js",
-  "unpkg": "dist/vue-dream-table.min.js",
+  "unpkg": "dist/vue-dream-table.min.s",
   "files": [
     "dist/*",
     "src/**/*.vue"
