@@ -43,15 +43,14 @@ import VueDreamTable froom "vue-dream-table";
 export default {
     data() {
     return {
-      title: "Posts",
+      title: "Users",
       getUrl: "https://jsonplaceholder.typicode.com/users",
       createUrl: "https://jsonplaceholder.typicode.com/users",
       dataName: [],
       isHiddenByDefault: true,
-      hiddenItemsByDefault: [],
-      chosenHiddenItemsByDefault: [],
-      token:
-        "eyJhbGciOiJSUzI1NiIsInR5svcCI6IkpXVCJ9.sjv7weIl",
+      hiddenItemsByDefault: ['username', 'password'],
+      loaderImg: '',
+      
     };
   },
 }

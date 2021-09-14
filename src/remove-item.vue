@@ -1,12 +1,8 @@
 <template>
   <div>
     <template v-if="actionAsIcon">
-      <img
-        src="./public/images/delete.png"
-        alt="remove"
-        class="remove-icon"
-        @click="remove"
-      />
+      <trash class="trash" />
+      <i class="fa fa-user" />
     </template>
     <template v-else>
       <button @click="remove">Remove</button>
@@ -15,8 +11,14 @@
 </template>
 
 <script>
+import Trash from "vue-material-design-icons/TrashCan.vue";
+
 export default {
   name: "RemoveItem",
+
+  components: {
+    Trash,
+  },
 
   props: {
     actionAsIcon: {
@@ -36,5 +38,9 @@ export default {
 <style scoped>
 .remove-icon {
   cursor: pointer;
+}
+.trash {
+  color: red;
+  font-size: 15px;
 }
 </style>

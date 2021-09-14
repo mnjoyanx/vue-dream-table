@@ -186,7 +186,7 @@ export default {
 
     editable: {
       type: Boolean,
-      default: () => true,
+      default: () => false,
     },
 
     deletable: {

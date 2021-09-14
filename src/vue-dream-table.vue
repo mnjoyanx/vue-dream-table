@@ -2,11 +2,10 @@
   <div>
     <hello-vue
       :showPopupToCheckHiddenItems="true"
-      :hiddenItemsByDefault="['body', 'username']"
+      :hiddenItemsByDefault="['username', 'password']"
       :allowAddNewItem="true"
       :actions="true"
       :deletable="true"
-      :editable="true"
       :actionAsIcon="true"
       :addItemFields="['email', 'username']"
       :createRequestParam="'data'"

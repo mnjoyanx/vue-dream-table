@@ -1,12 +1,7 @@
 <template>
   <div>
     <template v-if="actionAsIcon">
-      <img
-        src="./public/images/edit.png"
-        alt="edit"
-        class="edit-icon"
-        @click="edit"
-      />
+      icon
     </template>
     <template v-else>
       <button @click="edit">Edit</button>
