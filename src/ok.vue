@@ -8,6 +8,29 @@
           :searchParams="filters.search"
           @searchHandler="searchHandler"
         />
+        <div class="date_range-picker">
+          <div
+            class="absolute_range-picker"
+            v-if="pickerIsVisible"
+            @click="pickerIsVisible = false"
+          ></div>
+          <div class="d-flex align-center">
+            <date-range-picker
+              v-model="dateRange"
+              @select="changeDate"
+              @toggle="toggleDate"
+              :ranges="false"
+              :auto-apply="true"
+              :close-on-esc="true"
+            />
+            <span
+              class="close_date-range"
+              @click="clearDateValue"
+              v-if="dateRange.startDate !== null"
+              >&#x2715;</span
+            >
+          </div>
+        </div>
         <div class="select-bar" v-if="filters.select.selectable">
           <select-bar :select="filters.select" @select="selectHandler" />
         </div>
@@ -133,6 +156,9 @@ import EditItem from "./edit-item.vue";
 import RemoveItem from "./remove-item.vue";
 import SearchBar from "./search-bar";
 import SelectBar from "./select-bar.vue";
+import DateRangePicker from "vue2-daterange-picker";
+//you need to import the CSS manually
+import "vue2-daterange-picker/dist/vue2-daterange-picker.css";
 
 export default {
   name: "VueDreamTable",
@@ -237,6 +263,11 @@ export default {
             placeholder: "Select",
             optionValue: [],
           },
+
+          date: {
+            dateFilter: true,
+            dateBy: "createdAt",
+          },
         };
       },
     },
@@ -259,6 +290,7 @@ export default {
     RemoveItem,
     SearchBar,
     SelectBar,
+    DateRangePicker,
   },
 
   data() {
@@ -268,6 +300,11 @@ export default {
       image: "",
       errors: "",
       hiddenitems: ["created_at", "updated_at"],
+      dateRange: {
+        startDate: "2015-12-26",
+        endDate: "2021-5-28",
+      },
+      pickerIsVisible: false,
     };
   },
 
@@ -286,6 +323,70 @@ export default {
   },
 
   methods: {
+    clearDateValue() {
+      this.dateRange.startDate = null;
+      this.dateRange.endDate = null;
+      // const { date } = this.filters;
+
+      // console.log(this.$route.query);
+      // let param = JSON.parse(JSON.stringify(this.$route.query));
+      // if (date.key) {
+      //   console.log("oiiiiiiii", param[date.key]);
+
+      //   delete param[date].key;
+      //   console.log("oiiiiiiii", param[date.key]);
+      // } else {
+      //   delete param.dateBy;
+      // }
+
+      // // delete params[date.key];
+      // this.$router.push({
+      //   query: {
+      //     path: this.$route.path,
+      //     ...param,
+      //   },
+      // });
+    },
+
+    toggleDate() {
+      this.pickerIsVisible = true;
+    },
+
+    changeDate() {
+      const { date } = this.filters;
+      let params = date.key
+        ? {
+            ...this.$route.query,
+            [date.key]: JSON.stringify({
+              [date.dateBy]: {
+                from: this.dateRange.startDate,
+                to: this.dateRange.endDate,
+              },
+            }),
+          }
+        : {
+            ...this.$route.query,
+            [date.dateBy]: {
+              from: this.dateRange.startDate,
+              to: this.dateRange.endDate,
+            },
+          };
+
+      axios
+        .get("http://git.inoclouds.com:4111/user/projects", {
+          params,
+        })
+        .then((response) => {
+          if (this.dataName) {
+            const dataname = this.dataName.join(".");
+            this.allData = response.data[dataname];
+          } else {
+            this.allData = response.data;
+          }
+        });
+
+      this.$router.push({ query: params });
+    },
     selectHandler(value) {
       const { select } = this.filters;
       let params = select.key
@@ -526,7 +627,7 @@ export default {
   margin-bottom: 0.5rem;
 }
 .main-wrapper {
-  overflow: hidden;
+  /* overflow: hidden; */
 }
 
 .dream_table-main {
@@ -558,6 +659,9 @@ tr:nth-child(even) {
   display: flex;
 }
 
+.align-center {
+  align-items: center;
+}
 .show_more-info {
   background-color: #4caf50;
   color: white;
@@ -642,5 +746,25 @@ tr:nth-child(even) {
 
 .select-bar {
   margin-left: 10px;
+}
+
+.date_range-picker {
+  margin-left: 10px;
+}
+
+.absolute_range-picker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+.close_date-range {
+  color: gray;
+  cursor: pointer;
+  font-size: 20px;
+  margin-left: 3px;
 }
 </style>

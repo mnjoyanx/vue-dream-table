@@ -13,6 +13,7 @@
       :actionAsIcon="true"
       :dataName="['message']"
       :createRequestParam="'data'"
+      @searchHandler="searchHandler"
       :deleteRequest="{
         url: 'https://jsonplaceholder.typicode.com/posts',
         method: 'delete',
@@ -34,6 +35,12 @@
           key: 'filter',
           selected: 'three',
         },
+
+        date: {
+          dateFilter: true,
+          dateBy: 'createdAt',
+          key: 'between',
+        },
       }"
       @showMoreHandler="showMore"
       @createHandler="createHandler"
@@ -51,6 +58,9 @@ export default {
   },
 
   methods: {
+    searchHandler(value) {
+      console.log(value);
+    },
     showMore(data) {
       console.log(data, "data show more");
     },
