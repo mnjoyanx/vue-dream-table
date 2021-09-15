@@ -25,6 +25,15 @@
           searchBy: 'name',
           key: 'search',
         },
+
+        select: {
+          selectable: true,
+          placeholder: 'select',
+          optionValue: ['one', 'two', 'three', 'four'],
+          selectBy: 'name',
+          key: 'filter',
+          selected: 'three',
+        },
       }"
       @showMoreHandler="showMore"
       @createHandler="createHandler"

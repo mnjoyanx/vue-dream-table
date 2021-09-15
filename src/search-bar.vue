@@ -3,10 +3,10 @@
     <input
       type="text"
       class="search_bar-input"
+      :placeholder="searchParams.placeholder"
       v-model="searchValue"
       @input="changeSearchValueHandler"
     />
-    {{ searchParams }}
   </div>
 </template>
 

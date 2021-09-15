@@ -2,12 +2,15 @@
   <div class="main-wrapper">
     <h2 v-if="title" class="dream_table-title">{{ title }}</h2>
     <div class="filter-main d-flex justify-between">
-      <div>
+      <div class="d-flex">
         <search-bar
           v-if="filters.search.searchable"
           :searchParams="filters.search"
           @searchHandler="searchHandler"
         />
+        <div class="select-bar" v-if="filters.select.selectable">
+          <select-bar :select="filters.select" @select="selectHandler" />
+        </div>
       </div>
       <div class="create-btn" v-if="allowAddNewItem">
         <button class="create_btn-item" @click="createItemHandler">Add</button>
@@ -15,7 +18,7 @@
     </div>
     <table class="dream_table-main">
       <thead>
-        <tr>
+        <tr v-if="largestRowItems.length">
           <th
             v-for="item in largestRowItems"
             :key="item"
@@ -129,6 +132,7 @@ import HiddenItemsPopup from "./HIddenItemsPopup";
 import EditItem from "./edit-item.vue";
 import RemoveItem from "./remove-item.vue";
 import SearchBar from "./search-bar";
+import SelectBar from "./select-bar.vue";
 
 export default {
   name: "VueDreamTable",
@@ -228,6 +232,11 @@ export default {
             placeholder: "Search",
             searchBy: "name",
           },
+          select: {
+            selectable: true,
+            placeholder: "Select",
+            optionValue: [],
+          },
         };
       },
     },
@@ -249,6 +258,7 @@ export default {
     EditItem,
     RemoveItem,
     SearchBar,
+    SelectBar,
   },
 
   data() {
@@ -276,13 +286,27 @@ export default {
   },
 
   methods: {
-    searchHandler(value) {
-      const { search } = this.filters;
-      const params = search.key
-        ? { [search.key]: JSON.stringify({ [search.searchBy]: value }) }
-        : { [search.searchBy]: value };
+    selectHandler(value) {
+      const { select } = this.filters;
+      let params = select.key
+        ? {
+            ...this.$route.query,
+            [select.key]: JSON.stringify({ [select.selectBy]: value }),
+          }
+        : { ...this.$route.query, [select.selectBy]: value };
+
+      if (!value) {
+        delete params[select.key];
+        this.$router.push({
+          query: {
+            path: this.$route.path,
+            ...params,
+          },
+        });
+      }
+
       this.$router.push({ query: params });
-      console.log(this.$router);
+
       axios
         .get("http://git.inoclouds.com:4111/user/projects", {
           params,
@@ -295,9 +319,41 @@ export default {
             this.allData = response.data;
           }
         });
-      // this.allData = this.allData.filter((item) => {
-      //   return item[this.filters.search.searchBy].includes(value);
-      // });
+    },
+
+    searchHandler(value) {
+      const { search } = this.filters;
+      const params = search.key
+        ? {
+            ...this.$route.query,
+            [search.key]: JSON.stringify({ [search.searchBy]: value }),
+          }
+        : { ...this.$route.query, [search.searchBy]: value };
+
+      console.log(value, "vallall");
+      if (!value) {
+        delete params[search.key];
+        this.$router.push({
+          query: {
+            path: this.$route.path,
+            ...params,
+          },
+        });
+      }
+      this.$router.push({ query: params });
+
+      axios
+        .get("http://git.inoclouds.com:4111/user/projects", {
+          params,
+        })
+        .then((response) => {
+          if (this.dataName) {
+            const dataname = this.dataName.join(".");
+            this.allData = response.data[dataname];
+          } else {
+            this.allData = response.data;
+          }
+        });
     },
 
     changeVisibilityHandler(item) {
@@ -582,5 +638,9 @@ tr:nth-child(even) {
 
 .filter-main {
   margin-bottom: 10px;
+}
+
+.select-bar {
+  margin-left: 10px;
 }
 </style>
