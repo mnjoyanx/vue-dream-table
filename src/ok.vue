@@ -6,6 +6,7 @@
         <search-bar
           v-if="filters.search.searchable"
           :searchParams="filters.search"
+          :defaultSearchValueData="filters.search.defaultSearchValue"
           @searchHandler="searchHandler"
         />
         <div class="date_range-picker">
@@ -145,6 +146,15 @@
         </template>
       </tbody>
     </table>
+
+    <template v-if="this.filters.pagination">
+      <dream-pagination
+        :paginationInfo="filters.pagination"
+        :count="count"
+        :defaultPaginationPage="defaultPaginationPage"
+        @paginate="paginate"
+      />
+    </template>
   </div>
 </template>
 
@@ -159,6 +169,7 @@ import SelectBar from "./select-bar.vue";
 import DateRangePicker from "vue2-daterange-picker";
 //you need to import the CSS manually
 import "vue2-daterange-picker/dist/vue2-daterange-picker.css";
+import DreamPagination from "./dream-pagination.vue";
 
 export default {
   name: "VueDreamTable",
@@ -268,6 +279,8 @@ export default {
             dateFilter: true,
             dateBy: "createdAt",
           },
+
+          pagination: {},
         };
       },
     },
@@ -291,6 +304,7 @@ export default {
     SearchBar,
     SelectBar,
     DateRangePicker,
+    DreamPagination,
   },
 
   data() {
@@ -305,6 +319,10 @@ export default {
         endDate: "2021-5-28",
       },
       pickerIsVisible: false,
+      count: null,
+      defaultQueryParams: null,
+      defaultSearchValueData: "",
+      defaultPaginationPage: null,
     };
   },
 
@@ -323,6 +341,45 @@ export default {
   },
 
   methods: {
+    paginate(info) {
+      this.defaultPaginationPage = null;
+      const params = {
+        ...this.defaultQueryParams,
+        page: info.currentPage,
+        limit: info.limit,
+      };
+
+      const { pagination } = this.filters;
+      if (pagination.initialQueryParams) {
+        for (let key in pagination.initialQueryParams) {
+          params[key] = pagination.initialQueryParams[key];
+        }
+      }
+
+      axios
+        .get(this.getUrl, { params })
+        .then((response) => {
+          if (this.dataName) {
+            console.log("ok");
+            let dataClone = JSON.parse(JSON.stringify(response.data));
+            for (let i = 0; i < this.dataName.length; i++) {
+              dataClone = dataClone[this.dataName[i]];
+            }
+
+            this.allData = dataClone;
+
+            console.log(this.allData, "allldata");
+          } else {
+            this.allData = response.data;
+          }
+        })
+        .catch((err) => {
+          this.errors = err;
+        });
+
+      this.$router.push({ query: params });
+    },
+
     clearDateValue() {
       this.dateRange.startDate = null;
       this.dateRange.endDate = null;
@@ -373,13 +430,17 @@ export default {
           };
 
       axios
-        .get("http://git.inoclouds.com:4111/user/projects", {
+        .get(this.getUrl, {
           params,
         })
         .then((response) => {
           if (this.dataName) {
-            const dataname = this.dataName.join(".");
-            this.allData = response.data[dataname];
+            let dataClone = JSON.parse(JSON.stringify(response.data));
+            for (let i = 0; i < this.dataName.length; i++) {
+              dataClone = dataClone[this.dataName[i]];
+            }
+
+            this.allData = dataClone;
           } else {
             this.allData = response.data;
           }
@@ -388,13 +449,17 @@ export default {
       this.$router.push({ query: params });
     },
     selectHandler(value) {
-      const { select } = this.filters;
+      const { select, pagination } = this.filters;
+      this.defaultPaginationPage = 1;
+      if (this.defaultQueryParams.page) {
+        this.defaultQueryParams.page = 1;
+      }
       let params = select.key
         ? {
-            ...this.$route.query,
+            ...this.defaultQueryParams,
             [select.key]: JSON.stringify({ [select.selectBy]: value }),
           }
-        : { ...this.$route.query, [select.selectBy]: value };
+        : { ...this.defaultQueryParams, [select.selectBy]: value };
 
       if (!value) {
         delete params[select.key];
@@ -409,13 +474,34 @@ export default {
       this.$router.push({ query: params });
 
       axios
-        .get("http://git.inoclouds.com:4111/user/projects", {
+        .get(this.getUrl, {
           params,
         })
         .then((response) => {
+          if (pagination) {
+            if (pagination.key) {
+              if (pagination.count) {
+                console.error(
+                  `Please pass one of these fields 'count' or 'key' to get data count`
+                );
+                throw new Error();
+              }
+
+              let dataClone = JSON.parse(JSON.stringify(response.data));
+              for (let i = 0; i < pagination.key.length; i++) {
+                dataClone = dataClone[pagination.key[i]];
+              }
+
+              this.count = dataClone;
+            }
+          }
           if (this.dataName) {
-            const dataname = this.dataName.join(".");
-            this.allData = response.data[dataname];
+            let dataClone = JSON.parse(JSON.stringify(response.data));
+            for (let i = 0; i < this.dataName.length; i++) {
+              dataClone = dataClone[this.dataName[i]];
+            }
+
+            this.allData = dataClone;
           } else {
             this.allData = response.data;
           }
@@ -423,15 +509,20 @@ export default {
     },
 
     searchHandler(value) {
-      const { search } = this.filters;
+      this.defaultPaginationPage = 1;
+      if (this.defaultQueryParams.page) {
+        console.log('ok mt')
+        this.defaultQueryParams.page = 1;
+      }
+
+      const { search, pagination } = this.filters;
       const params = search.key
         ? {
-            ...this.$route.query,
+            ...this.defaultQueryParams,
             [search.key]: JSON.stringify({ [search.searchBy]: value }),
           }
-        : { ...this.$route.query, [search.searchBy]: value };
+        : { ...this.defaultQueryParams, [search.searchBy]: value };
 
-      console.log(value, "vallall");
       if (!value) {
         delete params[search.key];
         this.$router.push({
@@ -441,16 +532,38 @@ export default {
           },
         });
       }
+
       this.$router.push({ query: params });
 
       axios
-        .get("http://git.inoclouds.com:4111/user/projects", {
+        .get(this.getUrl, {
           params,
         })
         .then((response) => {
+          if (pagination) {
+            if (pagination.key) {
+              if (pagination.count) {
+                console.error(
+                  `Please pass one of these fields 'count' or 'key' to get data count`
+                );
+                throw new Error();
+              }
+
+              let dataClone = JSON.parse(JSON.stringify(response.data));
+              for (let i = 0; i < pagination.key.length; i++) {
+                dataClone = dataClone[pagination.key[i]];
+              }
+
+              this.count = dataClone;
+            }
+          }
           if (this.dataName) {
-            const dataname = this.dataName.join(".");
-            this.allData = response.data[dataname];
+            let dataClone = JSON.parse(JSON.stringify(response.data));
+            for (let i = 0; i < this.dataName.length; i++) {
+              dataClone = dataClone[this.dataName[i]];
+            }
+
+            this.allData = dataClone;
           } else {
             this.allData = response.data;
           }
@@ -517,11 +630,63 @@ export default {
     },
 
     getData() {
+      console.log("obshi data");
       if (this.isLoading) {
         this.isLoading = true;
       }
+
+      const { pagination, search, select } = this.filters;
+
+      let params = { ...this.$route.query };
+
+      if (pagination) {
+        let initialQueries;
+        if (pagination.initialQueryParams) {
+          initialQueries = pagination.initialQueryParams;
+        }
+        const paginationInfo = {
+          limit: pagination.limit || 10,
+          page: pagination.page || 1,
+          ...initialQueries,
+        };
+
+        params = { ...this.$route.query, ...paginationInfo };
+      }
+
+      if (search) {
+        if (search.defaultSearchValue) {
+          this.defaultSearchValueData = search.defaultSearchValue;
+          console.log(this.defaultSearchValueData, "97");
+          const defaultSearch = search.key
+            ? {
+                [search.key]: JSON.stringify({
+                  [search.searchBy]: search.defaultSearchValue,
+                }),
+              }
+            : { [search.searchBy]: search.defaultSearchValue };
+
+          params = { ...params, ...defaultSearch };
+        }
+      }
+
+      if (select) {
+        if (select.selected) {
+          const defaultSelected = select.key
+            ? {
+                [select.key]: JSON.stringify({
+                  [select.selectBy]: select.optionValue[select.selected],
+                }),
+              }
+            : {
+                [select.selectBy]: select.optionValue[select.selected],
+              };
+
+          params = { ...params, ...defaultSelected };
+        }
+      }
+
       axios
-        .get("http://git.inoclouds.com:4111/user/projects")
+        .get(this.getUrl, { params })
         // .get(this.getUrl)
         // .get("http://crm.masterpharm.am:6661/cli?branch_id=2")
         // .get("https://randomuser.me/api/")
@@ -531,9 +696,31 @@ export default {
         // )
         .then((response) => {
           this.isLoading = false;
+          const { pagination } = this.filters;
+          if (pagination) {
+            if (pagination.key) {
+              if (pagination.count) {
+                console.error(
+                  `Please pass one of these fields 'count' or 'key' to get data count`
+                );
+                throw new Error();
+              }
+
+              let dataClone = JSON.parse(JSON.stringify(response.data));
+              for (let i = 0; i < pagination.key.length; i++) {
+                dataClone = dataClone[pagination.key[i]];
+              }
+
+              this.count = dataClone;
+            }
+          }
           if (this.dataName) {
-            const dataname = this.dataName.join(".");
-            this.allData = response.data[dataname];
+            let dataClone = JSON.parse(JSON.stringify(response.data));
+            for (let i = 0; i < this.dataName.length; i++) {
+              dataClone = dataClone[this.dataName[i]];
+            }
+            console.log(this.$route.query, "queryyyyy");
+            this.allData = dataClone;
           } else {
             this.allData = response.data;
           }
@@ -552,6 +739,16 @@ export default {
     if (this.isLoad) {
       this.isLoading = this.isLoad;
     }
+
+    // const { pagination } = this.filters;
+    // if (Object.keys(pagination).length) {
+    //   if (pagination.totalRows && pagination.key) {
+    //     // error
+    //   }
+    //   !pagination.limitPerPage
+    //     ? (pagination.limitPerPage = 10)
+    //     : pagination.limitPerPage;
+    // }
   },
 
   mounted() {
@@ -560,9 +757,10 @@ export default {
       // const authorizationToken = token ? token : "";
       // config.headers.Authorization =
       //   "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNjMxNDQ0NzQxLCJleHAiOjE2MzUwNDQ3NDF9.Bs5ftW2MVLalfZSxZdJ8DOpc44aUa22EN8HtrWdc2_oY95Rc4WGBaDrXKMIr46spW7YSN4Zxs661m6KXx-x-KQ";
-      config.headers.Authorization =
-        this.token ||
-        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNjMxNjQzOTk2LCJleHAiOjE2MzUyNDM5OTZ9.MPtXIAU_1R8iIe7gbRf1anAwCpUb6L734RCgbKfquUSFcopk4wXaG1bc291iLv96vgagQwnozW0SzyCLq-eBbQ";
+      console.log(config, "config");
+      this.defaultQueryParams = config.params;
+      config.headers.Authorization = this.token || "";
+      // config.params = { ...config.params, pagination: 1 };
       return config;
     });
 

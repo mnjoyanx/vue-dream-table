@@ -12,7 +12,11 @@
         :value="item"
         v-for="(item, key) in select.optionValue"
         :key="key"
-        :selected="select.selected ? item == select.selected : key == 0"
+        :selected="
+          select.selected
+            ? item == select.optionValue[select.selected]
+            : key == -1
+        "
       >
         {{ item }}
       </option>

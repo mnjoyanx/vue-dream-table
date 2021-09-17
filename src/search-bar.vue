@@ -19,6 +19,10 @@ export default {
       type: Object,
       required: false,
     },
+
+    defaultSearchValueData: {
+      required: false,
+    },
   },
 
   data() {
@@ -31,6 +35,12 @@ export default {
     changeSearchValueHandler() {
       this.$emit("searchHandler", this.searchValue);
     },
+  },
+
+  created() {
+    if (this.defaultSearchValueData) {
+      this.searchValue = this.defaultSearchValueData;
+    }
   },
 };
 </script>

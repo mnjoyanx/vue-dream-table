@@ -11,8 +11,9 @@
       :editable="true"
       :deletable="true"
       :actionAsIcon="true"
-      :dataName="['message']"
-      :createRequestParam="'data'"
+      getUrl="http://crm.masterpharm.am:6661/cli?branch_id=2"
+      token="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNjMxNzg4NjgyLCJleHAiOjE2MzUzODg2ODJ9.AooLp1rBn-CygYaaIpk8slVV-Un7RaPzMH3bGgrm4F1u6MUaZAJhxzv4QJXQdtrLBy9FmAHDTEgogHpjTgylQA"
+      :dataName="['message', 'rows']"
       @searchHandler="searchHandler"
       :deleteRequest="{
         url: 'https://jsonplaceholder.typicode.com/posts',
@@ -20,11 +21,13 @@
         deleteRequestParam: 'id',
       }"
       :filters="{
+        dataCount: 10,
         search: {
           searchable: true,
           placeholder: 'Search',
           searchBy: 'name',
           key: 'search',
+          defaultSearchValue: 'ԱԼԻՆԱ',
         },
 
         select: {
@@ -33,13 +36,20 @@
           optionValue: ['one', 'two', 'three', 'four'],
           selectBy: 'name',
           key: 'filter',
-          selected: 'three',
         },
 
         date: {
           dateFilter: true,
           dateBy: 'createdAt',
           key: 'between',
+        },
+
+        pagination: {
+          limit: 5,
+          key: ['message', 'count'],
+          initialQueryParams: {
+            pagination: 1,
+          },
         },
       }"
       @showMoreHandler="showMore"
