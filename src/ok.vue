@@ -4,7 +4,7 @@
     <div class="filter-main d-flex justify-between">
       <div class="d-flex">
         <search-bar
-          v-if="filters.search.searchable"
+          v-if="Object.keys(filters.search).length"
           :searchParams="filters.search"
           :defaultSearchValueData="filters.search.defaultSearchValue"
           @searchHandler="searchHandler"
@@ -17,6 +17,7 @@
           ></div>
           <div class="d-flex align-center">
             <date-range-picker
+              v-if="Object.keys(filters.date).length"
               v-model="dateRange"
               @select="changeDate"
               @toggle="toggleDate"
@@ -27,12 +28,14 @@
             <span
               class="close_date-range"
               @click="clearDateValue"
-              v-if="dateRange.startDate !== null"
+              v-if="
+                dateRange.startDate !== null && Object.keys(filters.date).length
+              "
               >&#x2715;</span
             >
           </div>
         </div>
-        <div class="select-bar" v-if="filters.select.selectable">
+        <div class="select-bar" v-if="Object.keys(filters.select).length">
           <select-bar :select="filters.select" @select="selectHandler" />
         </div>
       </div>
@@ -40,114 +43,123 @@
         <button class="create_btn-item" @click="createItemHandler">Add</button>
       </div>
     </div>
-    <table class="dream_table-main">
-      <thead>
-        <tr v-if="largestRowItems.length">
-          <th
-            v-for="item in largestRowItems"
-            :key="item"
-            :class="{
-              none: hiddenitems.includes(item),
-            }"
-          >
-            {{ item }}
-          </th>
-          <th class="table-actions">
-            <div @click="sortBy('name')" v-if="actions"></div>
-            <div
+    <div class="table_scroll-x">
+      <table class="dream_table-main">
+        <thead>
+          <tr v-if="largestRowItems.length">
+            <th
+              v-for="item in largestRowItems"
+              :key="item"
               :class="{
-                'hidden_items-popup': !showPopupToCheckHiddenItems,
-                'show_hidden-items': showPopupToCheckHiddenItems,
+                none: hiddenitems.includes(item),
               }"
             >
-              <span @click="showHiddenItemsPopup" class="show_hidden-items"
-                >...</span
+              <span @click="sortHandler(item)">
+                {{ item | capitalize | removeUnderscores }}</span
               >
-              <hidden-items-popup
-                ref="hidden-items"
-                :items="
-                  hiddenItemsByDefault.length
-                    ? hiddenItemsByDefault
-                    : hiddenitems
-                "
-                @changeVisibility="changeVisibilityHandler"
-              />
-            </div>
-          </th>
-        </tr>
-      </thead>
-      <tbody class="main-table" :class="{ 'loading-wrapper': isLoading }">
-        <template v-if="allData.length">
-          <tr v-for="(item, key) in allData" :key="key">
-            <template>
-              <td
-                v-for="(i, key) in Object.keys(item)"
-                :key="key"
-                :class="{
-                  'more_info-btn':
-                    typeof item[i] === 'object' && item[i] !== null,
-                  none: hiddenitems.includes(i),
-                }"
-                class="dream-table-td"
-              >
-                <!-- if field is object show it in popup modal -->
-                <template
-                  v-if="typeof item[i] === 'object' && item[i] !== null"
-                >
-                  <button
-                    class="show_more-info"
-                    @click="showMoreHandler(item, i)"
-                  >
-                    show more
-                  </button>
-                </template>
-                <template
-                  v-else-if="item[i] == null || typeof item[i] == undefined"
-                >
-                  <p>empty</p>
-                </template>
-                <template v-else>
-                  <template v-if="image">
-                    <img :src="image" alt="image" class="dream-image" />
-                  </template>
-                  <template v-else>
-                    {{ item[i] }}
-                  </template>
-                </template>
-              </td>
-            </template>
-            <td class="d-flex">
+            </th>
+            <th class="table-actions">
+              <div @click="sortBy('name')" v-if="actions"></div>
               <div
-                class="edit_item-action"
-                :class="{ 'action_is-visible': !editable || !actions }"
+                :class="{
+                  'hidden_items-popup': !showPopupToCheckHiddenItems,
+                  'show_hidden-items': showPopupToCheckHiddenItems,
+                }"
               >
-                <edit-item @edit="edit(item)" :actionAsIcon="actionAsIcon" />
-              </div>
-              <div :class="{ 'action_is-visible': !deletable || !actions }">
-                <remove-item
-                  @remove="remove(item)"
-                  :actionAsIcon="actionAsIcon"
+                <span @click="showHiddenItemsPopup" class="show_hidden-items"
+                  >...</span
+                >
+                <hidden-items-popup
+                  ref="hidden-items"
+                  :items="
+                    hiddenItemsByDefault.length
+                      ? hiddenItemsByDefault
+                      : hiddenitems
+                  "
+                  @changeVisibility="changeVisibilityHandler"
                 />
               </div>
-            </td>
+            </th>
           </tr>
-        </template>
+        </thead>
+        <tbody class="main-table" :class="{ 'loading-wrapper': isLoading }">
+          <template v-if="allData.length">
+            <tr v-for="(item, key) in allData" :key="key">
+              <template>
+                <td
+                  v-for="(i, key) in Object.keys(item)"
+                  :key="key"
+                  :class="{
+                    'more_info-btn':
+                      typeof item[i] === 'object' && item[i] !== null,
+                    none: hiddenitems.includes(i),
+                  }"
+                  class="dream-table-td"
+                >
+                  <!-- if field is object show it in popup modal -->
+                  <template v-if="typeof item[i] === 'object' && item[i]">
+                    <button
+                      class="show_more-info"
+                      @click="showMoreHandler(item, i)"
+                    >
+                      show more
+                    </button>
+                  </template>
 
-        <template v-else-if="isLoading">
-          <div class="loading-wrapper">
-            <img :src="loaderImg" v-if="loaderImg" class="image-center" />
-            <div class="loading" v-else>Loading...</div>
-          </div>
-        </template>
-        <template v-else>
-          <tr>
-            <td colspan="3">No Data {{ errors }}</td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
+                  <template v-else-if="!item[i]">
+                    <template v-if="item[i] == 0">
+                      0
+                    </template>
+                    <template v-else-if="item[i] == false">
+                      false
+                    </template>
+                    <template v-else>
+                      N/A
+                    </template>
+                  </template>
+                  <template v-else>
+                    <template v-if="typeof item[i] === 'string'">
+                      {{ item[i] | maxStringSize(maxStrSize) }}
+                    </template>
+                    <template v-else>
+                      {{ item[i] }}
+                    </template>
+                  </template>
+                </td>
+              </template>
+              <td class="d-flex">
+                <div
+                  class="edit_item-action"
+                  :class="{ 'action_is-visible': !editable || !actions }"
+                >
+                  <edit-item @edit="edit(item)" :actionAsIcon="actionAsIcon" />
+                </div>
+                <div :class="{ 'action_is-visible': !deletable || !actions }">
+                  <remove-item
+                    @remove="remove(item)"
+                    :actionAsIcon="actionAsIcon"
+                  />
+                </div>
+              </td>
+            </tr>
+          </template>
 
-    <template v-if="this.filters.pagination">
+          <template v-else-if="isLoading">
+            <div class="loading-wrapper">
+              <img :src="loaderImg" v-if="loaderImg" class="image-center" />
+              <div class="loading" v-else>Loading...</div>
+            </div>
+          </template>
+          <template v-else>
+            <tr>
+              <td colspan="3">No Data {{ errors }}</td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+
+    <template v-if="Object.keys(filters.pagination).length">
       <dream-pagination
         :paginationInfo="filters.pagination"
         :count="count"
@@ -264,37 +276,20 @@ export default {
       type: Object,
       default: () => {
         return {
-          search: {
-            searchable: true,
-            placeholder: "Search",
-            searchBy: "name",
-          },
-          select: {
-            selectable: true,
-            placeholder: "Select",
-            optionValue: [],
-          },
+          search: {},
+          select: {},
 
-          date: {
-            dateFilter: true,
-            dateBy: "createdAt",
-          },
+          date: {},
 
           pagination: {},
         };
       },
     },
 
-    // updatedRequest: {
-    //   type: Object,
-    //   default: () => {
-    //     return {
-    //       crud: {
-    //         uri: "hello update",
-    //       },
-    //     };
-    //   },
-    // },
+    maxStrSize: {
+      type: Number,
+      required: false,
+    },
   },
 
   components: {
@@ -310,6 +305,8 @@ export default {
   data() {
     return {
       allData: [],
+      lorem:
+        "lorem sdvksmdvsmd vs dvsodvmsodv sdvkmsldkvmsdv sdvkmsdmvsdvmsdvsdvmsdvv",
       isLoading: false,
       image: "",
       errors: "",
@@ -341,6 +338,10 @@ export default {
   },
 
   methods: {
+    sortHandler(item) {
+      console.log("ok sort", item);
+    },
+
     paginate(info) {
       this.defaultPaginationPage = null;
       const params = {
@@ -360,7 +361,6 @@ export default {
         .get(this.getUrl, { params })
         .then((response) => {
           if (this.dataName) {
-            console.log("ok");
             let dataClone = JSON.parse(JSON.stringify(response.data));
             for (let i = 0; i < this.dataName.length; i++) {
               dataClone = dataClone[this.dataName[i]];
@@ -478,7 +478,7 @@ export default {
           params,
         })
         .then((response) => {
-          if (pagination) {
+          if (Object.keys(pagination).length) {
             if (pagination.key) {
               if (pagination.count) {
                 console.error(
@@ -511,7 +511,6 @@ export default {
     searchHandler(value) {
       this.defaultPaginationPage = 1;
       if (this.defaultQueryParams.page) {
-        console.log('ok mt')
         this.defaultQueryParams.page = 1;
       }
 
@@ -540,7 +539,7 @@ export default {
           params,
         })
         .then((response) => {
-          if (pagination) {
+          if (Object.keys(pagination).length) {
             if (pagination.key) {
               if (pagination.count) {
                 console.error(
@@ -630,7 +629,6 @@ export default {
     },
 
     getData() {
-      console.log("obshi data");
       if (this.isLoading) {
         this.isLoading = true;
       }
@@ -639,7 +637,7 @@ export default {
 
       let params = { ...this.$route.query };
 
-      if (pagination) {
+      if (Object.keys(pagination).length) {
         let initialQueries;
         if (pagination.initialQueryParams) {
           initialQueries = pagination.initialQueryParams;
@@ -653,7 +651,7 @@ export default {
         params = { ...this.$route.query, ...paginationInfo };
       }
 
-      if (search) {
+      if (Object.keys(search).length) {
         if (search.defaultSearchValue) {
           this.defaultSearchValueData = search.defaultSearchValue;
           console.log(this.defaultSearchValueData, "97");
@@ -669,7 +667,7 @@ export default {
         }
       }
 
-      if (select) {
+      if (Object.keys(select).length) {
         if (select.selected) {
           const defaultSelected = select.key
             ? {
@@ -816,7 +814,11 @@ export default {
 };
 </script>
 
-<style scoped>
+<style>
+.main-wrapper {
+  width: 90%;
+  margin: 0 auto;
+}
 .dream_table-title {
   text-align: left;
   font-size: 1.5rem;
@@ -824,13 +826,16 @@ export default {
   color: #000;
   margin-bottom: 0.5rem;
 }
-.main-wrapper {
+.table_scroll-x {
   /* overflow: hidden; */
+  width: 100%;
+  overflow-x: scroll;
 }
 
 .dream_table-main {
   font-family: arial, sans-serif;
   width: 100%;
+  overflow-x: scroll;
   border-collapse: collapse;
 }
 table tbody {
@@ -849,8 +854,37 @@ th {
 td {
 }
 
+th {
+  white-space: nowrap;
+}
+
 tr:nth-child(even) {
   background-color: #dddddd;
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 15px;
+}
+
+::-webkit-scrollbar {
+  height: 13px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #777;
 }
 
 .d-flex {
@@ -879,10 +913,16 @@ tr:nth-child(even) {
 }
 
 .create_btn-item {
-  background: #dddddd;
-  border: 1px solid black;
-  padding: 4px 8px;
+  background: transparent;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 70px;
+  height: 32px;
   cursor: pointer;
+}
+
+.create_btn-item:hover {
+  border: 1px solid #60a5fa;
 }
 
 .dream-image {
@@ -963,6 +1003,22 @@ tr:nth-child(even) {
   color: gray;
   cursor: pointer;
   font-size: 20px;
-  margin-left: 3px;
+  margin-left: -18px;
+  z-index: 9999;
 }
+
+.vue-daterange-picker {
+  font-size: 16px;
+  width: 235px;
+}
+div.reportrange-text {
+  border-radius: 5px !important;
+}
+
+/* .max_str-size {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+} */
 </style>

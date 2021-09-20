@@ -55,7 +55,7 @@ export default {
 
 .search_bar-input:focus {
   outline: none;
-  border: 1px solid blue;
+  border: 1px solid #60a5fa;
 }
 
 .search_bar-input::placeholder {

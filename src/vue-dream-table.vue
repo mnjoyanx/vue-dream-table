@@ -3,31 +3,25 @@
     <hello-vue
       title="Title"
       :showPopupToCheckHiddenItems="true"
-      :hiddenItemsByDefault="['username', 'password']"
+      :hiddenItemsByDefault="['image', 'age']"
       :isLoad="true"
-      loaderImg="https://c.tenor.com/I6kN-6X7nhAAAAAj/loading-buffering.gif"
+      loaderImg="http://217.23.2.205:6662/movies?pagination=1&page=1&limit=10&sort=id,desc"
       :allowAddNewItem="true"
       :actions="true"
       :editable="true"
       :deletable="true"
       :actionAsIcon="true"
-      getUrl="http://crm.masterpharm.am:6661/cli?branch_id=2"
-      token="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNjMxNzg4NjgyLCJleHAiOjE2MzUzODg2ODJ9.AooLp1rBn-CygYaaIpk8slVV-Un7RaPzMH3bGgrm4F1u6MUaZAJhxzv4QJXQdtrLBy9FmAHDTEgogHpjTgylQA"
+      getUrl="http://217.23.2.205:6662/movies?pagination=1&page=1&limit=10&sort=id,desc"
+      token="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidHlwZSI6ImFkbWluIiwidG9rZW5fdHlwZSI6ImFjY2Vzc190b2tlbiIsImlhdCI6MTYzMjEyMjU4MywiZXhwIjoxNjMyMTI2MTgzfQ.MvaY2K2Qs26Fa6mabk_r4kfnS43JHEXWfpl4F6p0jZ0dMwXyLDwAaXfxC4NaDeQLDjCGmpkgtw8HNoHEZmiPhg"
       :dataName="['message', 'rows']"
-      @searchHandler="searchHandler"
-      :deleteRequest="{
-        url: 'https://jsonplaceholder.typicode.com/posts',
-        method: 'delete',
-        deleteRequestParam: 'id',
-      }"
+      :maxStrSize="15"
       :filters="{
         dataCount: 10,
         search: {
           searchable: true,
           placeholder: 'Search',
           searchBy: 'name',
-          key: 'search',
-          defaultSearchValue: 'ԱԼԻՆԱ',
+          defaultSearchValue: 'Leanne Graham',
         },
 
         select: {
@@ -46,11 +40,14 @@
 
         pagination: {
           limit: 5,
-          key: ['message', 'count'],
-          initialQueryParams: {
-            pagination: 1,
-          },
+          key: ['message'],
         },
+      }"
+      @searchHandler="searchHandler"
+      :deleteRequest="{
+        url: 'https://jsonplaceholder.typicode.com/posts',
+        method: 'delete',
+        deleteRequestParam: 'id',
       }"
       @showMoreHandler="showMore"
       @createHandler="createHandler"
