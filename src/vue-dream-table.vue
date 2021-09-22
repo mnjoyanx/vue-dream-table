@@ -11,17 +11,15 @@
       :editable="true"
       :deletable="true"
       :actionAsIcon="true"
-      getUrl="http://217.23.2.205:6662/movies?pagination=1&page=1&limit=10&sort=id,desc"
-      token="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidHlwZSI6ImFkbWluIiwidG9rZW5fdHlwZSI6ImFjY2Vzc190b2tlbiIsImlhdCI6MTYzMjEyMjU4MywiZXhwIjoxNjMyMTI2MTgzfQ.MvaY2K2Qs26Fa6mabk_r4kfnS43JHEXWfpl4F6p0jZ0dMwXyLDwAaXfxC4NaDeQLDjCGmpkgtw8HNoHEZmiPhg"
+      getUrl="http://217.23.2.205:6662/movies"
+      token="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidHlwZSI6ImFkbWluIiwidG9rZW5fdHlwZSI6ImFjY2Vzc190b2tlbiIsImlhdCI6MTYzMjI0ODc3MywiZXhwIjoxNjMyMjUyMzczfQ.XN52JJDQOYdQhB2CrXsB8ni8Iy5wjspE_FcQARFAqpJv4cu_YZFd4xIf6ShrrJlWoxXI1-FhjFbPHctf0kEYsA"
       :dataName="['message', 'rows']"
-      :maxStrSize="15"
       :filters="{
         dataCount: 10,
         search: {
           searchable: true,
           placeholder: 'Search',
           searchBy: 'name',
-          defaultSearchValue: 'Leanne Graham',
         },
 
         select: {
@@ -38,9 +36,18 @@
           key: 'between',
         },
 
+        sort: {
+          sortBy: 'id', // required
+          sortOrder: 'desc', // required
+          key: 'sort',
+        },
+
         pagination: {
           limit: 5,
-          key: ['message'],
+          key: ['message', 'count'],
+          initialQueryParams: {
+            pagination: 1,
+          },
         },
       }"
       @searchHandler="searchHandler"

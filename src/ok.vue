@@ -17,7 +17,7 @@
           ></div>
           <div class="d-flex align-center">
             <date-range-picker
-              v-if="Object.keys(filters.date).length"
+              v-if="filters && filters.date && Object.keys(filters.date).length"
               v-model="dateRange"
               @select="changeDate"
               @toggle="toggleDate"
@@ -35,7 +35,10 @@
             >
           </div>
         </div>
-        <div class="select-bar" v-if="Object.keys(filters.select).length">
+        <div
+          class="select-bar"
+          v-if="filters.select && Object.keys(filters.select).length"
+        >
           <select-bar :select="filters.select" @select="selectHandler" />
         </div>
       </div>
@@ -54,9 +57,15 @@
                 none: hiddenitems.includes(item),
               }"
             >
-              <span @click="sortHandler(item)">
-                {{ item | capitalize | removeUnderscores }}</span
-              >
+              <span @click="sortHandler(item)" class="dram_table-th">
+                {{ item | capitalize | removeUnderscores }}
+                <span v-if="sortOrderData === 'desc' && sortByData === item"
+                  >&#8648;</span
+                >
+                <span v-if="sortOrderData === 'asc' && sortByData === item"
+                  >&#8650;</span
+                >
+              </span>
             </th>
             <th class="table-actions">
               <div @click="sortBy('name')" v-if="actions"></div>
@@ -127,7 +136,7 @@
                   </template>
                 </td>
               </template>
-              <td class="d-flex">
+              <td class="d-flex actions-table">
                 <div
                   class="edit_item-action"
                   :class="{ 'action_is-visible': !editable || !actions }"
@@ -159,7 +168,10 @@
       </table>
     </div>
 
-    <template v-if="Object.keys(filters.pagination).length">
+    {{ $props.filters.sort }}
+    <template
+      v-if="filters.pagination && Object.keys(filters.pagination).length"
+    >
       <dream-pagination
         :paginationInfo="filters.pagination"
         :count="count"
@@ -179,7 +191,6 @@ import RemoveItem from "./remove-item.vue";
 import SearchBar from "./search-bar";
 import SelectBar from "./select-bar.vue";
 import DateRangePicker from "vue2-daterange-picker";
-//you need to import the CSS manually
 import "vue2-daterange-picker/dist/vue2-daterange-picker.css";
 import DreamPagination from "./dream-pagination.vue";
 
@@ -281,6 +292,8 @@ export default {
 
           date: {},
 
+          sort: {},
+
           pagination: {},
         };
       },
@@ -288,7 +301,7 @@ export default {
 
     maxStrSize: {
       type: Number,
-      required: false,
+      default: () => 25,
     },
   },
 
@@ -320,6 +333,10 @@ export default {
       defaultQueryParams: null,
       defaultSearchValueData: "",
       defaultPaginationPage: null,
+      sortByData: "",
+      sortOrderData: "desc",
+      isSorted: false,
+      defaultSortData: [],
     };
   },
 
@@ -339,7 +356,15 @@ export default {
 
   methods: {
     sortHandler(item) {
-      console.log("ok sort", item);
+      this.sortByData = item;
+      this.sortOrderData = "desc";
+      if (this.sortOrderData === "asc") {
+        this.sortOrderData = "";
+      } else if (this.sortOrderData === "desc") {
+        this.sortOrderData = "asc";
+      } else {
+        this.sortOrderData = "desc";
+      }
     },
 
     paginate(info) {
@@ -478,7 +503,7 @@ export default {
           params,
         })
         .then((response) => {
-          if (Object.keys(pagination).length) {
+          if (pagination && Object.keys(pagination).length) {
             if (pagination.key) {
               if (pagination.count) {
                 console.error(
@@ -539,7 +564,7 @@ export default {
           params,
         })
         .then((response) => {
-          if (Object.keys(pagination).length) {
+          if (pagination && Object.keys(pagination).length) {
             if (pagination.key) {
               if (pagination.count) {
                 console.error(
@@ -637,7 +662,7 @@ export default {
 
       let params = { ...this.$route.query };
 
-      if (Object.keys(pagination).length) {
+      if (pagination && Object.keys(pagination).length) {
         let initialQueries;
         if (pagination.initialQueryParams) {
           initialQueries = pagination.initialQueryParams;
@@ -651,7 +676,7 @@ export default {
         params = { ...this.$route.query, ...paginationInfo };
       }
 
-      if (Object.keys(search).length) {
+      if (search && Object.keys(search).length) {
         if (search.defaultSearchValue) {
           this.defaultSearchValueData = search.defaultSearchValue;
           console.log(this.defaultSearchValueData, "97");
@@ -667,7 +692,7 @@ export default {
         }
       }
 
-      if (Object.keys(select).length) {
+      if (select && Object.keys(select).length) {
         if (select.selected) {
           const defaultSelected = select.key
             ? {
@@ -738,7 +763,23 @@ export default {
       this.isLoading = this.isLoad;
     }
 
-    // const { pagination } = this.filters;
+    const { pagination, sort } = this.filters;
+    if (this.filters && pagination) {
+      if (!pagination.key && !pagination.count) {
+        console.error("Please pass required parameter!");
+        throw new Error();
+      }
+    }
+
+    if (this.filters && sort) {
+      console.log(sort, "sort");
+      if (!sort.sortBy || !sort.sortOrder) {
+        console.error("Please pass required parameters!");
+        throw new Error();
+      }
+      // this.sortByData = sort.sortBy;
+      this.sortOrderData = sort.sortOrder;
+    }
     // if (Object.keys(pagination).length) {
     //   if (pagination.totalRows && pagination.key) {
     //     // error
@@ -856,6 +897,7 @@ td {
 
 th {
   white-space: nowrap;
+  min-width: 75px;
 }
 
 tr:nth-child(even) {
@@ -1021,4 +1063,14 @@ div.reportrange-text {
   text-overflow: ellipsis;
   white-space: nowrap;
 } */
+
+.actions-table {
+  height: 100%;
+  border: none;
+  border-top: 1px solid #dddddd;
+}
+
+.dram_table-th {
+  cursor: pointer;
+}
 </style>
