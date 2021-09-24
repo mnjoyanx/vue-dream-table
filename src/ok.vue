@@ -357,22 +357,78 @@ export default {
 
   methods: {
     sortHandler(item) {
+      const { sort, pagination } = this.filters;
+
       if (this.sortByData !== item) {
         this.sortOrderData = "desc";
         this.sortByData = item;
         this.sortIsClicked = true;
+        // this.$emit("sortCallback", [item, this.sortOrderData]);
       } else {
         if (this.sortOrderData === "desc" && this.sortIsClicked) {
           this.sortOrderData = "asc";
           this.sortIsClicked = true;
+          // this.$emit("sortCallback", { key: item, order: this.sortOrderData });
         } else if (this.sortOrderData === "asc" && this.sortIsClicked) {
           this.sortIsClicked = false;
           this.sortOrderData = "";
+          // this.$emit("sortCallback", { key: item, order: this.sortOrderData });
         } else {
           this.sortIsClicked = true;
           this.sortOrderData = "desc";
+          // this.$emit("sortCallback", { key: item, order: this.sortOrderData });
         }
       }
+
+      const params = {
+        ...this.defaultQueryParams,
+        [this.sortByData]: this.sortOrderData,
+      };
+
+      if (this.sortOrderData === "") {
+        delete params[this.sortByData];
+        this.$router.push({
+          query: {
+            path: this.$route.path,
+            ...params,
+          },
+        });
+      }
+      this.$router.push({ query: params });
+
+      axios
+        .get(this.getUrl, {
+          params,
+        })
+        .then((response) => {
+          if (pagination && Object.keys(pagination).length) {
+            if (pagination.key) {
+              if (pagination.count) {
+                console.error(
+                  `Please pass one of these fields 'count' or 'key' to get data count`
+                );
+                throw new Error();
+              }
+
+              let dataClone = JSON.parse(JSON.stringify(response.data));
+              for (let i = 0; i < pagination.key.length; i++) {
+                dataClone = dataClone[pagination.key[i]];
+              }
+
+              this.count = dataClone;
+            }
+          }
+          if (this.dataName) {
+            let dataClone = JSON.parse(JSON.stringify(response.data));
+            for (let i = 0; i < this.dataName.length; i++) {
+              dataClone = dataClone[this.dataName[i]];
+            }
+
+            this.allData = dataClone;
+          } else {
+            this.allData = response.data;
+          }
+        });
     },
 
     paginate(info) {
@@ -400,8 +456,6 @@ export default {
             }
 
             this.allData = dataClone;
-
-            console.log(this.allData, "allldata");
           } else {
             this.allData = response.data;
           }
@@ -449,8 +503,8 @@ export default {
             ...this.$route.query,
             [date.key]: JSON.stringify({
               [date.dateBy]: {
-                from: this.dateRange.startDate,
-                to: this.dateRange.endDate,
+                from: this.dateRange.startDate, // from will be come from props for example "fromDateKey" //TODO
+                to: this.dateRange.endDate, // to will be come from props for example "startDateKey"  //TODO
               },
             }),
           }
@@ -763,6 +817,7 @@ export default {
   },
 
   created() {
+    //  !TODO there are any filters object which is defined but no has any value throw error
     if (this.$props.hiddenItemsByDefault.length) {
       this.hiddenitems = this.$props.hiddenItemsByDefault;
     }
@@ -786,6 +841,7 @@ export default {
       }
       // this.sortByData = sort.sortBy;
       this.sortOrderData = sort.sortOrder;
+      this.sortByData = sort.sortBy;
     }
     // if (Object.keys(pagination).length) {
     //   if (pagination.totalRows && pagination.key) {

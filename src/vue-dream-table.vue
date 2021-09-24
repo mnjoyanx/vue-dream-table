@@ -1,6 +1,7 @@
 <template>
   <div>
     <hello-vue
+      @sortCallback="sortCallback"
       title="Title"
       :showPopupToCheckHiddenItems="true"
       :hiddenItemsByDefault="['image', 'age']"
@@ -12,8 +13,8 @@
       :deletable="true"
       :actionAsIcon="true"
       getUrl="http://crm.masterpharm.am:6661/settings"
-      token="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjMyNDg1MjYzLCJleHAiOjE2MzI0ODg4NjN9.M50zAMup4tNI1Zvc_DttxQubayzju1J9JdNCJUTBGZCalkX1pojU2sNGSXvwzuYU-LOhMrl6w3ESxfCVOztkAw"
-      :dataName="['message']"
+      token="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjMyNTA2NjA1LCJleHAiOjE2MzI1MTAyMDV9.AYCcFGi28B3FxC5BaCrEKiTXM2dkOT4656YL_uaUSip2s8h9MfcOixYGuS_uWoZLB5yCtMRaL8TRGhS_LaLuPw"
+      :dataName="['message', 'rows']"
       :filters="{
         dataCount: 10,
         search: {
@@ -39,7 +40,16 @@
         sort: {
           sortBy: 'id', // required
           sortOrder: 'desc', // required
+          sortDataT: this.sortData,
           key: 'sort',
+        },
+
+        pagination: {
+          count: ['message', 'count'],
+          limit: 4,
+          initialQueryParams: {
+            pagination: 1,
+          },
         },
       }"
       @searchHandler="searchHandler"
@@ -63,7 +73,17 @@ export default {
     HelloVue,
   },
 
+  data() {
+    return {
+      sortData: "",
+    };
+  },
+
   methods: {
+    sortCallback(sort) {
+      this.sortData = sort.join(",");
+    },
+
     searchHandler(value) {
       console.log(value);
     },
