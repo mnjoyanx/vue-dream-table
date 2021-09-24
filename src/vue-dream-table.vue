@@ -11,9 +11,9 @@
       :editable="true"
       :deletable="true"
       :actionAsIcon="true"
-      getUrl="http://217.23.2.205:6662/movies"
-      token="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidHlwZSI6ImFkbWluIiwidG9rZW5fdHlwZSI6ImFjY2Vzc190b2tlbiIsImlhdCI6MTYzMjI0ODc3MywiZXhwIjoxNjMyMjUyMzczfQ.XN52JJDQOYdQhB2CrXsB8ni8Iy5wjspE_FcQARFAqpJv4cu_YZFd4xIf6ShrrJlWoxXI1-FhjFbPHctf0kEYsA"
-      :dataName="['message', 'rows']"
+      getUrl="http://crm.masterpharm.am:6661/settings"
+      token="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjMyNDg1MjYzLCJleHAiOjE2MzI0ODg4NjN9.M50zAMup4tNI1Zvc_DttxQubayzju1J9JdNCJUTBGZCalkX1pojU2sNGSXvwzuYU-LOhMrl6w3ESxfCVOztkAw"
+      :dataName="['message']"
       :filters="{
         dataCount: 10,
         search: {
@@ -40,14 +40,6 @@
           sortBy: 'id', // required
           sortOrder: 'desc', // required
           key: 'sort',
-        },
-
-        pagination: {
-          limit: 5,
-          key: ['message', 'count'],
-          initialQueryParams: {
-            pagination: 1,
-          },
         },
       }"
       @searchHandler="searchHandler"

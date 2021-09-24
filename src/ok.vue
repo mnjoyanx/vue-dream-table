@@ -334,8 +334,9 @@ export default {
       defaultSearchValueData: "",
       defaultPaginationPage: null,
       sortByData: "",
-      sortOrderData: "desc",
+      sortOrderData: "",
       isSorted: false,
+      sortIsClicked: false,
       defaultSortData: [],
     };
   },
@@ -356,14 +357,21 @@ export default {
 
   methods: {
     sortHandler(item) {
-      this.sortByData = item;
-      this.sortOrderData = "desc";
-      if (this.sortOrderData === "asc") {
-        this.sortOrderData = "";
-      } else if (this.sortOrderData === "desc") {
-        this.sortOrderData = "asc";
-      } else {
+      if (this.sortByData !== item) {
         this.sortOrderData = "desc";
+        this.sortByData = item;
+        this.sortIsClicked = true;
+      } else {
+        if (this.sortOrderData === "desc" && this.sortIsClicked) {
+          this.sortOrderData = "asc";
+          this.sortIsClicked = true;
+        } else if (this.sortOrderData === "asc" && this.sortIsClicked) {
+          this.sortIsClicked = false;
+          this.sortOrderData = "";
+        } else {
+          this.sortIsClicked = true;
+          this.sortOrderData = "desc";
+        }
       }
     },
 
@@ -742,7 +750,6 @@ export default {
             for (let i = 0; i < this.dataName.length; i++) {
               dataClone = dataClone[this.dataName[i]];
             }
-            console.log(this.$route.query, "queryyyyy");
             this.allData = dataClone;
           } else {
             this.allData = response.data;
