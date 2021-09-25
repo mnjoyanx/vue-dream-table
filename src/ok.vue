@@ -691,6 +691,7 @@ export default {
       } else {
         this.hiddenitems.push(item);
       }
+      console.log(this.hiddenitems, "okkkk");
     },
 
     showHiddenItemsPopup() {
@@ -698,7 +699,6 @@ export default {
     },
 
     showMoreHandler(item, i) {
-      // this.$refs["show-more"].show();
       this.$emit("showMoreHandler", { data: item, item: i });
     },
 

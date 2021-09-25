@@ -4,7 +4,7 @@
       @sortCallback="sortCallback"
       title="Title"
       :showPopupToCheckHiddenItems="true"
-      :hiddenItemsByDefault="['image', 'age']"
+      :hiddenItemsByDefault="['created_at', 'updated_at']"
       :isLoad="true"
       loaderImg="http://217.23.2.205:6662/movies?pagination=1&page=1&limit=10&sort=id,desc"
       :allowAddNewItem="true"

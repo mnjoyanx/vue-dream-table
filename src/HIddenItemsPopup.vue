@@ -54,6 +54,8 @@ export default {
       this.isVisible = false;
     },
   },
+
+  // TODO add hidden items to local storage
 };
 </script>
 
