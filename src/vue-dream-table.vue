@@ -13,10 +13,9 @@
       :deletable="true"
       :actionAsIcon="true"
       getUrl="http://crm.masterpharm.am:6661/settings"
-      token="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjMyNTA2NjA1LCJleHAiOjE2MzI1MTAyMDV9.AYCcFGi28B3FxC5BaCrEKiTXM2dkOT4656YL_uaUSip2s8h9MfcOixYGuS_uWoZLB5yCtMRaL8TRGhS_LaLuPw"
+      token="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjMyNTYxNzAxLCJleHAiOjE2MzI1NjUzMDF9.KdN15Vq9vkr96e5pZbFna1LvVYSYuji6abZ0UyaqVtCYsNy8Ry0Q7NtrQlEQBueo9OxZmsN-GILe8RQ7NpKHWg"
       :dataName="['message', 'rows']"
       :filters="{
-        dataCount: 10,
         search: {
           searchable: true,
           placeholder: 'Search',
@@ -38,9 +37,11 @@
         },
 
         sort: {
-          sortBy: 'id', // required
-          sortOrder: 'desc', // required
-          sortDataT: this.sortData,
+          sortBy: 'id',
+          sortOrder: 'desc',
+          sortOrderData: {
+            sort: 'id,desc',
+          },
           key: 'sort',
         },
 
@@ -75,13 +76,16 @@ export default {
 
   data() {
     return {
-      sortData: "",
+      // sortData: JSON.stringify({
+      //   sort: { id: "desc" },
+      // }),
+      sortData: { sort: "id,desc" },
     };
   },
 
   methods: {
-    sortCallback(sort) {
-      this.sortData = sort.join(",");
+    sortCallback(data) {
+      this.$set(this.sortData, "sort", data.join(","));
     },
 
     searchHandler(value) {

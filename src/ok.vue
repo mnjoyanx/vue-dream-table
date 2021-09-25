@@ -168,7 +168,6 @@
       </table>
     </div>
 
-    {{ $props.filters.sort }}
     <template
       v-if="filters.pagination && Object.keys(filters.pagination).length"
     >
@@ -245,7 +244,7 @@ export default {
 
     showPopupToCheckHiddenItems: {
       type: Boolean,
-      default: () => true,
+      default: () => false,
     },
 
     chosenHiddenItemsByDefault: {
@@ -338,6 +337,7 @@ export default {
       isSorted: false,
       sortIsClicked: false,
       defaultSortData: [],
+      sortOrderedData: "",
     };
   },
 
@@ -363,26 +363,55 @@ export default {
         this.sortOrderData = "desc";
         this.sortByData = item;
         this.sortIsClicked = true;
-        // this.$emit("sortCallback", [item, this.sortOrderData]);
+        if (this.sortOrderedData) {
+          this.$emit("sortCallback", [item, this.sortOrderData]);
+        }
       } else {
         if (this.sortOrderData === "desc" && this.sortIsClicked) {
           this.sortOrderData = "asc";
           this.sortIsClicked = true;
-          // this.$emit("sortCallback", { key: item, order: this.sortOrderData });
+          if (this.sortOrderedData) {
+            this.$emit("sortCallback", {
+              key: item,
+              order: this.sortOrderData,
+            });
+          }
         } else if (this.sortOrderData === "asc" && this.sortIsClicked) {
           this.sortIsClicked = false;
           this.sortOrderData = "";
-          // this.$emit("sortCallback", { key: item, order: this.sortOrderData });
+          if (this.sortOrderedData) {
+            this.$emit("sortCallback", {
+              key: item,
+              order: this.sortOrderData,
+            });
+          }
         } else {
           this.sortIsClicked = true;
           this.sortOrderData = "desc";
-          // this.$emit("sortCallback", { key: item, order: this.sortOrderData });
+          if (this.sortOrderedData) {
+            this.$emit("sortCallback", {
+              key: item,
+              order: this.sortOrderData,
+            });
+          }
         }
+      }
+
+      let sortQueries;
+
+      if (this.sortOrderedData) {
+        if (typeof this.sortOrderedData === "object") {
+          sortQueries = { ...this.sortOrderedData };
+        } else {
+          sortQueries = JSON.parse(this.sortOrderedData);
+        }
+      } else {
+        sortQueries = { [this.sortByData]: this.sortOrderData };
       }
 
       const params = {
         ...this.defaultQueryParams,
-        [this.sortByData]: this.sortOrderData,
+        ...sortQueries,
       };
 
       if (this.sortOrderData === "") {
@@ -817,7 +846,16 @@ export default {
   },
 
   created() {
-    //  !TODO there are any filters object which is defined but no has any value throw error
+    if (this.filters) {
+      for (let i in this.filters) {
+        if (this.filters[i] instanceof Object) {
+          if (!Object.keys(this.filters[i]).length) {
+            console.error(`Please pass filters in ${i}`);
+            throw new Error();
+          }
+        }
+      }
+    }
     if (this.$props.hiddenItemsByDefault.length) {
       this.hiddenitems = this.$props.hiddenItemsByDefault;
     }
@@ -834,85 +872,25 @@ export default {
     }
 
     if (this.filters && sort) {
-      console.log(sort, "sort");
-      if (!sort.sortBy || !sort.sortOrder) {
-        console.error("Please pass required parameters!");
+      if (!sort.sortOrderData && (!sort.sortBy || !sort.sortOrder)) {
+        console.error("Please pass required parameter!");
         throw new Error();
+      } else if (sort.sortOrderData) {
+        // return callback
+        this.sortOrderedData = sort.sortOrderData;
+      } else {
+        this.sortOrderData = sort.sortOrder;
+        this.sortByData = sort.sortBy;
       }
-      // this.sortByData = sort.sortBy;
-      this.sortOrderData = sort.sortOrder;
-      this.sortByData = sort.sortBy;
     }
-    // if (Object.keys(pagination).length) {
-    //   if (pagination.totalRows && pagination.key) {
-    //     // error
-    //   }
-    //   !pagination.limitPerPage
-    //     ? (pagination.limitPerPage = 10)
-    //     : pagination.limitPerPage;
-    // }
   },
 
   mounted() {
     axios.interceptors.request.use((config) => {
-      // const token = this.token;
-      // const authorizationToken = token ? token : "";
-      // config.headers.Authorization =
-      //   "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNjMxNDQ0NzQxLCJleHAiOjE2MzUwNDQ3NDF9.Bs5ftW2MVLalfZSxZdJ8DOpc44aUa22EN8HtrWdc2_oY95Rc4WGBaDrXKMIr46spW7YSN4Zxs661m6KXx-x-KQ";
-      console.log(config, "config");
       this.defaultQueryParams = config.params;
       config.headers.Authorization = this.token || "";
-      // config.params = { ...config.params, pagination: 1 };
       return config;
     });
-
-    // setTimeout(() => {
-    //   (function(window) {
-    //     var errors = {};
-
-    //     window.checkImage = function(url, success, failure) {
-    //       var img = new Image(), // the
-    //         loaded = false,
-    //         errored = false;
-
-    //       img.onload = function() {
-    //         if (loaded) {
-    //           return;
-    //         }
-
-    //         loaded = true;
-
-    //         if (success && success.call) {
-    //           success.call(img);
-    //         }
-    //       };
-
-    //       img.onerror = function() {
-    //         if (errored) {
-    //           return;
-    //         }
-
-    //         errors[url] = errored = true;
-
-    //         if (failure && failure.call) {
-    //           failure.call(img);
-    //         }
-    //       };
-
-    //       img.src = url;
-    //       this.image = img.src;
-    //       if (errors[url]) {
-    //         img.onerror.call(img);
-    //       }
-
-    //       if (img.complete) {
-    //         img.onload.call(img);
-    //       }
-    //     };
-    //     window.checkImage("https://via.placeholder.com/600/92c952");
-    //   })(this);
-    // }, 5000);
-
     this.getData();
   },
 };
