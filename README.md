@@ -24,68 +24,31 @@ npm install vue-dream-table
 
 ```sh
 <template>
-<vue-dream-table
-      :title="title"
-      :getUrl="getUrl"
-      :createUrl="createUrl"
-      :dataName="dataName"
-      :isLoad="isLoad"
-      :loaderImg="loaderImg"
-      :isHiddenByDefault="isHiddenByDefault"
-      :allowAddNewItem="allowAddNewItem"
-      :addItemsFields="addItemsFields"
-      :createRequestParam="createRequestParam"
-      :actions="actions"
-      :deletable="deletable"
-      :deleteRequest="deleteRequest"
-      :actionAsIcon="actionAsIcon"
-      @showMoreHandler="showMoreHandler"
-      @createHandler="createHandler"
-      @editHandler="editHandler"
-    />
+    <vue-dream-table :options="options"  />
 </template>
 
 <script>
 import VueDreamTable from "vue-dream-table";
 
 export default {
-    data() {
-    return {
-      title: 'Users',
-      getUrl: 'https://jsonplaceholder.typicode.com/users',
-      createUrl: 'https://jsonplaceholder.typicode.com/users',
-      dataName: [],
-      isHiddenByDefault: true,
-      hiddenItemsByDefault: ['username', 'password'],
-      isLoad: true,
-      loaderImg: 'https://c.tenor.com/I6kN-6X7nhAAAAAj/loading-buffering.gif',
-      allowAddNewItem: true,
-      addItemsFields: ['email', 'username'],
-      createRequestParam: 'data', 
-      actions: true,
-      deletable: true,
-      deleteRequest: {
-        ur: 'https://jsonplaceholder.typicode.com/posts',
-        method: 'delete',
-        deleteRequestParam: 'id'
-      },
-      actionAsIcon: true,
-    };
-  },
-
-  methods: {
-    showMoreHandler(data) {
-      // do smth
+    components: {
+      VueDreamTable,
     },
 
-    createHandler(data) {
-      // do smth
-    }
-
-    editHandler(data) {
-      // do smth
-    }
-  }
+    data() {
+    return {
+      options: {
+        getUrl: "https://jsonplaceholder.typicode.com/users",
+        token:
+          "eyJhbGciOviJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwveaviaWF0IjoxNjMyNjczODExLCJleHAiOjE2MzI2Nzc0MTF9ev.R8hZz-0qCXRnR04veev0-yeFr1MlpWT-iaxUxIsN9WCtW_LwdpdoUTQaX155tcvezKPdW8iLWvfYeGmHZqzfrp_nScArAev",
+        title: "This is title",
+        isLoad: true,
+        hiddenItemsByDefault: ["id"],
+        actions: true,
+        maxStrSize: 25,
+      },
+    };
+  },
 }
 </script>
 ```
@@ -94,7 +57,20 @@ export default {
 
 👤 **mnjoyan**
 
-* Github: [@mnjoyanx](https://github.com/mnjoyanx)
+
+<h2>Props info</h2>
+
+| Data  | Type | Required | Description | Default Values |
+| ------------- | ------------- | ------------- | ------------- | ------------- |
+| getUrl  | string  | false | Get data url | "https://jsonplaceholder.typicode.com/users" |
+| token  | string  | false | If your back-end needs token pass this prop | "" |
+| isLoad  | boolean  | false | Show loader when request status is pending | false |
+| loaderImg  | string  | false | Show loading as img |  |
+| dataName  | array  | false | Path to get data // ["rows"] -> response.data.rows | [] |
+| hiddenItemsByDefault  | array  | false | Hide table fields | [] |
+| actions  | boolean  | false | Show or hide table actions | false |
+| maxStrSize  | number  | false | Split text | 15 |
+
 
 ## Show your support
 
