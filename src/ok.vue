@@ -1,12 +1,12 @@
 <template>
   <div class="main-wrapper">
-    <h2 v-if="title" class="dream_table-title">{{ title }}</h2>
+    <h2 v-if="options.title" class="dream_table-title">{{ options.title }}</h2>
     <div class="filter-main d-flex justify-between">
       <div class="d-flex">
         <search-bar
-          v-if="Object.keys(filters.search).length"
-          :searchParams="filters.search"
-          :defaultSearchValueData="filters.search.defaultSearchValue"
+          v-if="Object.keys(options.filters && options.filters.search).length"
+          :searchParams="options.filters.search"
+          :defaultSearchValueData="options.filters.search.defaultSearchValue"
           @searchHandler="searchHandler"
         />
         <div class="date_range-picker">
@@ -17,7 +17,11 @@
           ></div>
           <div class="d-flex align-center">
             <date-range-picker
-              v-if="filters && filters.date && Object.keys(filters.date).length"
+              v-if="
+                options.filters &&
+                  options.filters.date &&
+                  Object.keys(options.filters.date).length
+              "
               v-model="dateRange"
               @select="changeDate"
               @toggle="toggleDate"
@@ -29,7 +33,9 @@
               class="close_date-range"
               @click="clearDateValue"
               v-if="
-                dateRange.startDate !== null && Object.keys(filters.date).length
+                dateRange.startDate !== null &&
+                  options.filters &&
+                  Object.keys(options.filters.date).length
               "
               >&#x2715;</span
             >
@@ -37,12 +43,17 @@
         </div>
         <div
           class="select-bar"
-          v-if="filters.select && Object.keys(filters.select).length"
+          v-if="
+            options.filters.select && Object.keys(options.filters.select).length
+          "
         >
-          <select-bar :select="filters.select" @select="selectHandler" />
+          <select-bar
+            :select="options.filters.select"
+            @select="selectHandler"
+          />
         </div>
       </div>
-      <div class="create-btn" v-if="allowAddNewItem">
+      <div class="create-btn" v-if="options.allowAddNewItem">
         <button class="create_btn-item" @click="createItemHandler">Add</button>
       </div>
     </div>
@@ -67,12 +78,12 @@
                 >
               </span>
             </th>
-            <th class="table-actions">
-              <div @click="sortBy('name')" v-if="actions"></div>
+            <th class="table-actions" :class="{ none: !options.actions }">
+              <div @click="sortBy('name')">Actions</div>
               <div
                 :class="{
-                  'hidden_items-popup': !showPopupToCheckHiddenItems,
-                  'show_hidden-items': showPopupToCheckHiddenItems,
+                  'hidden_items-popup': !options.showPopupToCheckHiddenItems,
+                  'show_hidden-items': options.showPopupToCheckHiddenItems,
                 }"
               >
                 <span @click="showHiddenItemsPopup" class="show_hidden-items"
@@ -81,8 +92,8 @@
                 <hidden-items-popup
                   ref="hidden-items"
                   :items="
-                    hiddenItemsByDefault.length
-                      ? hiddenItemsByDefault
+                    options.hiddenItemsByDefault
+                      ? options.hiddenItemsByDefault
                       : hiddenitems
                   "
                   @changeVisibility="changeVisibilityHandler"
@@ -128,7 +139,7 @@
                   </template>
                   <template v-else>
                     <template v-if="typeof item[i] === 'string'">
-                      {{ item[i] | maxStringSize(maxStrSize) }}
+                      {{ item[i] | maxStringSize(options.maxStrSize) }}
                     </template>
                     <template v-else>
                       {{ item[i] }}
@@ -136,17 +147,33 @@
                   </template>
                 </td>
               </template>
-              <td class="d-flex actions-table">
+              <td
+                class="d-flex actions-table"
+                :class="{
+                  none:
+                    (!options.editable && !options.deletable) ||
+                    !options.actions,
+                }"
+              >
                 <div
                   class="edit_item-action"
-                  :class="{ 'action_is-visible': !editable || !actions }"
+                  :class="{
+                    'action_is-visible': !options.editable || !options.actions,
+                  }"
                 >
-                  <edit-item @edit="edit(item)" :actionAsIcon="actionAsIcon" />
+                  <edit-item
+                    @edit="edit(item)"
+                    :actionAsIcon="options.actionAsIcon"
+                  />
                 </div>
-                <div :class="{ 'action_is-visible': !deletable || !actions }">
+                <div
+                  :class="{
+                    'action_is-visible': !options.deletable || !options.actions,
+                  }"
+                >
                   <remove-item
                     @remove="remove(item)"
-                    :actionAsIcon="actionAsIcon"
+                    :actionAsIcon="options.actionAsIcon"
                   />
                 </div>
               </td>
@@ -155,7 +182,11 @@
 
           <template v-else-if="isLoading">
             <div class="loading-wrapper">
-              <img :src="loaderImg" v-if="loaderImg" class="image-center" />
+              <img
+                :src="options.loaderImg"
+                v-if="options.loaderImg"
+                class="image-center"
+              />
               <div class="loading" v-else>Loading...</div>
             </div>
           </template>
@@ -169,10 +200,14 @@
     </div>
 
     <template
-      v-if="filters.pagination && Object.keys(filters.pagination).length"
+      v-if="
+        options.filters &&
+          options.filters.pagination &&
+          Object.keys(options.filters.pagination).length
+      "
     >
       <dream-pagination
-        :paginationInfo="filters.pagination"
+        :paginationInfo="options.filters.pagination"
         :count="count"
         :defaultPaginationPage="defaultPaginationPage"
         @paginate="paginate"
@@ -183,7 +218,6 @@
 
 <script>
 const axios = require("axios");
-
 import HiddenItemsPopup from "./HIddenItemsPopup";
 import EditItem from "./edit-item.vue";
 import RemoveItem from "./remove-item.vue";
@@ -192,118 +226,14 @@ import SelectBar from "./select-bar.vue";
 import DateRangePicker from "vue2-daterange-picker";
 import "vue2-daterange-picker/dist/vue2-daterange-picker.css";
 import DreamPagination from "./dream-pagination.vue";
-
 export default {
   name: "VueDreamTable",
-
   props: {
-    token: {
-      type: String,
-      required: false,
-    },
-
-    getUrl: {
-      type: String,
-      default: () => "https://jsonplaceholder.typicode.com/users",
-    },
-
-    createUrl: {
-      type: String,
-      default: () => "https://jsonplaceholder.typicode.com/users",
-    },
-
-    title: {
-      type: String,
-      required: false,
-    },
-
-    isLoad: {
-      type: Boolean,
-      default: false,
-    },
-
-    loaderImg: {
-      type: String,
-      required: false,
-    },
-
-    dataName: {
-      type: Array,
-      default: () => [],
-    },
-
-    isHiddenByDefault: {
-      type: Boolean,
-      default: () => true,
-    },
-
-    hiddenItemsByDefault: {
-      type: Array,
-      default: () => ["created_at", "updated_at"],
-    },
-
-    showPopupToCheckHiddenItems: {
-      type: Boolean,
-      default: () => false,
-    },
-
-    chosenHiddenItemsByDefault: {
-      type: Array,
-      required: false,
-    },
-
-    actions: {
-      type: Boolean,
-      default: () => false,
-    },
-
-    allowAddNewItem: {
-      type: Boolean,
-      default: () => false,
-    },
-
-    editable: {
-      type: Boolean,
-      default: () => false,
-    },
-
-    deletable: {
-      type: Boolean,
-      default: () => true,
-    },
-
-    actionAsIcon: {
-      type: Boolean,
-      default: () => false,
-    },
-
-    deleteRequest: {
+    options: {
       type: Object,
-      required: false,
-    },
-
-    filters: {
-      type: Object,
-      default: () => {
-        return {
-          search: {},
-          select: {},
-
-          date: {},
-
-          sort: {},
-
-          pagination: {},
-        };
-      },
-    },
-
-    maxStrSize: {
-      type: Number,
-      default: () => 25,
+      required: true,
     },
   },
-
   components: {
     HiddenItemsPopup,
     EditItem,
@@ -313,7 +243,6 @@ export default {
     DateRangePicker,
     DreamPagination,
   },
-
   data() {
     return {
       allData: [],
@@ -338,9 +267,9 @@ export default {
       sortIsClicked: false,
       defaultSortData: [],
       sortOrderedData: "",
+      defaultGetUrl: "https://jsonplaceholder.typicode.com/users",
     };
   },
-
   computed: {
     largestRowItems() {
       if (this.allData.length) {
@@ -354,66 +283,72 @@ export default {
       }
     },
   },
-
   methods: {
     sortHandler(item) {
-      const { sort, pagination } = this.filters;
-
+      const { getUrl, dataName, filters } = this.options;
+      const { pagination, sort } = filters;
+      let sortQueries;
       if (this.sortByData !== item) {
         this.sortOrderData = "desc";
         this.sortByData = item;
         this.sortIsClicked = true;
-        if (this.sortOrderedData) {
+        if (sort.sortOrderByData) {
           this.$emit("sortCallback", [item, this.sortOrderData]);
         }
       } else {
         if (this.sortOrderData === "desc" && this.sortIsClicked) {
           this.sortOrderData = "asc";
           this.sortIsClicked = true;
-          if (this.sortOrderedData) {
-            this.$emit("sortCallback", {
-              key: item,
-              order: this.sortOrderData,
-            });
+          if (sort.sortOrderByData) {
+            this.$emit("sortCallback", [item, this.sortOrderData]);
           }
         } else if (this.sortOrderData === "asc" && this.sortIsClicked) {
           this.sortIsClicked = false;
           this.sortOrderData = "";
-          if (this.sortOrderedData) {
-            this.$emit("sortCallback", {
-              key: item,
-              order: this.sortOrderData,
-            });
+          if (sort.sortOrderByData) {
+            if (this.sortOrderData === "") {
+              const params = {
+                ...this.defaultQueryParams,
+              };
+              delete params.sort;
+              this.$router.push({
+                query: {
+                  path: this.$route.path,
+                  ...params,
+                },
+              });
+            }
+            // this.$emit("sortCallback", [item, " "]);
           }
         } else {
           this.sortIsClicked = true;
           this.sortOrderData = "desc";
-          if (this.sortOrderedData) {
-            this.$emit("sortCallback", {
-              key: item,
-              order: this.sortOrderData,
-            });
+          if (sort.sortOrderByData) {
+            this.$emit("sortCallback", [item, this.sortOrderData]);
           }
         }
       }
-
-      let sortQueries;
-
-      if (this.sortOrderedData) {
-        if (typeof this.sortOrderedData === "object") {
-          sortQueries = { ...this.sortOrderedData };
+      if (sort.sortOrderByData) {
+        if (this.sortOrderData === "") {
+          delete sortQueries.sort;
+          sortQueries = {
+            ...this.defaultQueryParams,
+          };
+        }
+        if (typeof sort.sortOrderByData === "object") {
+          sortQueries = { ...sort.sortOrderByData };
         } else {
-          sortQueries = JSON.parse(this.sortOrderedData);
+          console.log("else");
+          sortQueries = JSON.parse(sort.sortOrderByData);
         }
       } else {
         sortQueries = { [this.sortByData]: this.sortOrderData };
       }
-
       const params = {
         ...this.defaultQueryParams,
         ...sortQueries,
       };
-
+      console.log(params, 7777);
       if (this.sortOrderData === "") {
         delete params[this.sortByData];
         this.$router.push({
@@ -424,9 +359,8 @@ export default {
         });
       }
       this.$router.push({ query: params });
-
       axios
-        .get(this.getUrl, {
+        .get(getUrl, {
           params,
         })
         .then((response) => {
@@ -438,52 +372,46 @@ export default {
                 );
                 throw new Error();
               }
-
               let dataClone = JSON.parse(JSON.stringify(response.data));
               for (let i = 0; i < pagination.key.length; i++) {
                 dataClone = dataClone[pagination.key[i]];
               }
-
               this.count = dataClone;
             }
           }
-          if (this.dataName) {
+          if (dataName) {
             let dataClone = JSON.parse(JSON.stringify(response.data));
-            for (let i = 0; i < this.dataName.length; i++) {
-              dataClone = dataClone[this.dataName[i]];
+            for (let i = 0; i < dataName.length; i++) {
+              dataClone = dataClone[dataName[i]];
             }
-
             this.allData = dataClone;
           } else {
             this.allData = response.data;
           }
         });
     },
-
     paginate(info) {
+      const { getUrl, dataName, filters } = this.options;
+      const { pagination } = filters;
       this.defaultPaginationPage = null;
       const params = {
         ...this.defaultQueryParams,
         page: info.currentPage,
         limit: info.limit,
       };
-
-      const { pagination } = this.filters;
       if (pagination.initialQueryParams) {
         for (let key in pagination.initialQueryParams) {
           params[key] = pagination.initialQueryParams[key];
         }
       }
-
       axios
-        .get(this.getUrl, { params })
+        .get(getUrl, { params })
         .then((response) => {
-          if (this.dataName) {
+          if (dataName) {
             let dataClone = JSON.parse(JSON.stringify(response.data));
-            for (let i = 0; i < this.dataName.length; i++) {
-              dataClone = dataClone[this.dataName[i]];
+            for (let i = 0; i < dataName.length; i++) {
+              dataClone = dataClone[dataName[i]];
             }
-
             this.allData = dataClone;
           } else {
             this.allData = response.data;
@@ -492,26 +420,21 @@ export default {
         .catch((err) => {
           this.errors = err;
         });
-
       this.$router.push({ query: params });
     },
-
     clearDateValue() {
       this.dateRange.startDate = null;
       this.dateRange.endDate = null;
       // const { date } = this.filters;
-
       // console.log(this.$route.query);
       // let param = JSON.parse(JSON.stringify(this.$route.query));
       // if (date.key) {
       //   console.log("oiiiiiiii", param[date.key]);
-
       //   delete param[date].key;
       //   console.log("oiiiiiiii", param[date.key]);
       // } else {
       //   delete param.dateBy;
       // }
-
       // // delete params[date.key];
       // this.$router.push({
       //   query: {
@@ -520,13 +443,12 @@ export default {
       //   },
       // });
     },
-
     toggleDate() {
       this.pickerIsVisible = true;
     },
-
     changeDate() {
-      const { date } = this.filters;
+      const { dataName, filters } = this.options;
+      const { date } = filters;
       let params = date.key
         ? {
             ...this.$route.query,
@@ -544,28 +466,26 @@ export default {
               to: this.dateRange.endDate,
             },
           };
-
       axios
         .get(this.getUrl, {
           params,
         })
         .then((response) => {
-          if (this.dataName) {
+          if (dataName) {
             let dataClone = JSON.parse(JSON.stringify(response.data));
-            for (let i = 0; i < this.dataName.length; i++) {
-              dataClone = dataClone[this.dataName[i]];
+            for (let i = 0; i < dataName.length; i++) {
+              dataClone = dataClone[dataName[i]];
             }
-
             this.allData = dataClone;
           } else {
             this.allData = response.data;
           }
         });
-
       this.$router.push({ query: params });
     },
     selectHandler(value) {
-      const { select, pagination } = this.filters;
+      const { dataName, filters } = this.options;
+      const { select, pagination } = filters;
       this.defaultPaginationPage = 1;
       if (this.defaultQueryParams.page) {
         this.defaultQueryParams.page = 1;
@@ -576,7 +496,6 @@ export default {
             [select.key]: JSON.stringify({ [select.selectBy]: value }),
           }
         : { ...this.defaultQueryParams, [select.selectBy]: value };
-
       if (!value) {
         delete params[select.key];
         this.$router.push({
@@ -586,9 +505,7 @@ export default {
           },
         });
       }
-
       this.$router.push({ query: params });
-
       axios
         .get(this.getUrl, {
           params,
@@ -602,42 +519,37 @@ export default {
                 );
                 throw new Error();
               }
-
               let dataClone = JSON.parse(JSON.stringify(response.data));
               for (let i = 0; i < pagination.key.length; i++) {
                 dataClone = dataClone[pagination.key[i]];
               }
-
               this.count = dataClone;
             }
           }
-          if (this.dataName) {
+          if (dataName) {
             let dataClone = JSON.parse(JSON.stringify(response.data));
-            for (let i = 0; i < this.dataName.length; i++) {
-              dataClone = dataClone[this.dataName[i]];
+            for (let i = 0; i < dataName.length; i++) {
+              dataClone = dataClone[dataName[i]];
             }
-
             this.allData = dataClone;
           } else {
             this.allData = response.data;
           }
         });
     },
-
     searchHandler(value) {
+      const { getUrl, dataName, filters } = this.options;
+      const { search, pagination } = filters;
       this.defaultPaginationPage = 1;
       if (this.defaultQueryParams.page) {
         this.defaultQueryParams.page = 1;
       }
-
-      const { search, pagination } = this.filters;
       const params = search.key
         ? {
             ...this.defaultQueryParams,
             [search.key]: JSON.stringify({ [search.searchBy]: value }),
           }
         : { ...this.defaultQueryParams, [search.searchBy]: value };
-
       if (!value) {
         delete params[search.key];
         this.$router.push({
@@ -647,14 +559,13 @@ export default {
           },
         });
       }
-
       this.$router.push({ query: params });
-
       axios
-        .get(this.getUrl, {
+        .get(getUrl, {
           params,
         })
         .then((response) => {
+          console.log(response, "res");
           if (pagination && Object.keys(pagination).length) {
             if (pagination.key) {
               if (pagination.count) {
@@ -663,28 +574,24 @@ export default {
                 );
                 throw new Error();
               }
-
               let dataClone = JSON.parse(JSON.stringify(response.data));
               for (let i = 0; i < pagination.key.length; i++) {
                 dataClone = dataClone[pagination.key[i]];
               }
-
               this.count = dataClone;
             }
           }
-          if (this.dataName) {
+          if (dataName) {
             let dataClone = JSON.parse(JSON.stringify(response.data));
-            for (let i = 0; i < this.dataName.length; i++) {
-              dataClone = dataClone[this.dataName[i]];
+            for (let i = 0; i < dataName.length; i++) {
+              dataClone = dataClone[dataName[i]];
             }
-
             this.allData = dataClone;
           } else {
             this.allData = response.data;
           }
         });
     },
-
     changeVisibilityHandler(item) {
       if (this.hiddenitems.includes(item)) {
         this.hiddenitems = this.hiddenitems.filter((i) => i !== item);
@@ -693,35 +600,29 @@ export default {
       }
       console.log(this.hiddenitems, "okkkk");
     },
-
     showHiddenItemsPopup() {
       this.$refs["hidden-items"].show();
     },
-
     showMoreHandler(item, i) {
       this.$emit("showMoreHandler", { data: item, item: i });
     },
-
     createItemHandler() {
       this.$emit("createHandler", this.largestRowItems);
     },
-
     sortBy() {
       return "sortyBy";
     },
-
     edit(item) {
       this.$emit("editHandler", item);
     },
-
     remove(item) {
-      this.deleteRequest.method = this.deleteRequest.method.toUpperCase();
-      if (this.deleteRequest.method === "DELETE") {
+      // TODO add delete request callback
+      const { deleteRequest } = this.options;
+      deleteRequest.method = deleteRequest.method.toUpperCase();
+      if (deleteRequest.method === "DELETE") {
         axios
           .delete(
-            this.deleteRequest.url +
-              "/" +
-              item[this.deleteRequest.deleteRequestParam]
+            deleteRequest.url + "/" + item[deleteRequest.deleteRequestParam]
           )
           .then(() => {
             this.getData();
@@ -731,9 +632,9 @@ export default {
           });
       } else {
         axios
-          .post(this.deleteRequest.url, {
-            [this.deleteRequest.deleteRequestParam]:
-              item[this.deleteRequest.deleteRequestParam],
+          .post(deleteRequest.url, {
+            [deleteRequest.deleteRequestParam]:
+              item[deleteRequest.deleteRequestParam],
           })
           .then(() => {
             this.getData();
@@ -743,16 +644,13 @@ export default {
           });
       }
     },
-
     getData() {
+      const { getUrl, dataName, filters } = this.options;
+      const { pagination, search, select } = filters;
       if (this.isLoading) {
         this.isLoading = true;
       }
-
-      const { pagination, search, select } = this.filters;
-
       let params = { ...this.$route.query };
-
       if (pagination && Object.keys(pagination).length) {
         let initialQueries;
         if (pagination.initialQueryParams) {
@@ -763,10 +661,8 @@ export default {
           page: pagination.page || 1,
           ...initialQueries,
         };
-
         params = { ...this.$route.query, ...paginationInfo };
       }
-
       if (search && Object.keys(search).length) {
         if (search.defaultSearchValue) {
           this.defaultSearchValueData = search.defaultSearchValue;
@@ -778,11 +674,9 @@ export default {
                 }),
               }
             : { [search.searchBy]: search.defaultSearchValue };
-
           params = { ...params, ...defaultSearch };
         }
       }
-
       if (select && Object.keys(select).length) {
         if (select.selected) {
           const defaultSelected = select.key
@@ -794,13 +688,11 @@ export default {
             : {
                 [select.selectBy]: select.optionValue[select.selected],
               };
-
           params = { ...params, ...defaultSelected };
         }
       }
-
       axios
-        .get(this.getUrl, { params })
+        .get(getUrl, { params })
         // .get(this.getUrl)
         // .get("http://crm.masterpharm.am:6661/cli?branch_id=2")
         // .get("https://randomuser.me/api/")
@@ -810,7 +702,6 @@ export default {
         // )
         .then((response) => {
           this.isLoading = false;
-          const { pagination } = this.filters;
           if (pagination) {
             if (pagination.key) {
               if (pagination.count) {
@@ -819,19 +710,17 @@ export default {
                 );
                 throw new Error();
               }
-
               let dataClone = JSON.parse(JSON.stringify(response.data));
               for (let i = 0; i < pagination.key.length; i++) {
                 dataClone = dataClone[pagination.key[i]];
               }
-
               this.count = dataClone;
             }
           }
-          if (this.dataName) {
+          if (dataName) {
             let dataClone = JSON.parse(JSON.stringify(response.data));
-            for (let i = 0; i < this.dataName.length; i++) {
-              dataClone = dataClone[this.dataName[i]];
+            for (let i = 0; i < dataName.length; i++) {
+              dataClone = dataClone[dataName[i]];
             }
             this.allData = dataClone;
           } else {
@@ -844,34 +733,33 @@ export default {
         });
     },
   },
-
   created() {
-    if (this.filters) {
-      for (let i in this.filters) {
-        if (this.filters[i] instanceof Object) {
-          if (!Object.keys(this.filters[i]).length) {
+    const { isLoad, hiddenItemsByDefault, filters } = this.options;
+    const { pagination, sort } = filters;
+    console.log(filters, "fffififfifii");
+    if (filters) {
+      for (let i in filters) {
+        if (filters[i] instanceof Object) {
+          if (!Object.keys(filters[i]).length) {
             console.error(`Please pass filters in ${i}`);
             throw new Error();
           }
         }
       }
     }
-    if (this.$props.hiddenItemsByDefault.length) {
-      this.hiddenitems = this.$props.hiddenItemsByDefault;
+    if (hiddenItemsByDefault) {
+      this.hiddenitems = hiddenItemsByDefault;
     }
-    if (this.isLoad) {
-      this.isLoading = this.isLoad;
+    if (isLoad) {
+      this.isLoading = isLoad;
     }
-
-    const { pagination, sort } = this.filters;
-    if (this.filters && pagination) {
+    if (filters && pagination) {
       if (!pagination.key && !pagination.count) {
-        console.error("Please pass required parameter!");
+        console.error("Please pass required parameter count or key!");
         throw new Error();
       }
     }
-
-    if (this.filters && sort) {
+    if (filters && sort) {
       if (!sort.sortOrderData && (!sort.sortBy || !sort.sortOrder)) {
         console.error("Please pass required parameter!");
         throw new Error();
@@ -884,11 +772,11 @@ export default {
       }
     }
   },
-
   mounted() {
+    const { token } = this.options;
     axios.interceptors.request.use((config) => {
       this.defaultQueryParams = config.params;
-      config.headers.Authorization = this.token || "";
+      config.headers.Authorization = token || "";
       return config;
     });
     this.getData();
@@ -913,7 +801,6 @@ export default {
   width: 100%;
   overflow-x: scroll;
 }
-
 .dream_table-main {
   font-family: arial, sans-serif;
   width: 100%;
@@ -922,58 +809,46 @@ export default {
 }
 table tbody {
 }
-
 table thead {
 }
-
 td,
 th {
   border: 1px solid #dddddd;
   text-align: left;
   padding: 8px;
 }
-
 td {
 }
-
 th {
   white-space: nowrap;
   min-width: 75px;
 }
-
 tr:nth-child(even) {
   background-color: #dddddd;
 }
-
 /* width */
 ::-webkit-scrollbar {
   width: 10px;
 }
-
 /* Track */
 ::-webkit-scrollbar-track {
   background: #f1f1f1;
 }
-
 /* Handle */
 ::-webkit-scrollbar-thumb {
   background: #888;
   border-radius: 15px;
 }
-
 ::-webkit-scrollbar {
   height: 13px;
 }
-
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: #777;
 }
-
 .d-flex {
   display: flex;
 }
-
 .align-center {
   align-items: center;
 }
@@ -986,15 +861,12 @@ tr:nth-child(even) {
   border-radius: 5px;
   cursor: pointer;
 }
-
 .more_info-btn {
 }
-
 .create-btn {
   display: flex;
   justify-content: flex-end;
 }
-
 .create_btn-item {
   background: transparent;
   border: 1px solid #ccc;
@@ -1003,76 +875,60 @@ tr:nth-child(even) {
   height: 32px;
   cursor: pointer;
 }
-
 .create_btn-item:hover {
   border: 1px solid #60a5fa;
 }
-
 .dream-image {
   width: 50px;
   height: 50px;
 }
-
 .none {
-  display: none;
+  display: none !important;
 }
-
 .table-actions {
   display: flex;
   justify-content: space-between;
   position: relative;
 }
-
 .table-actions span {
   cursor: pointer;
 }
-
 .image-center {
   text-align: center;
   width: 25%;
   margin-top: 30px;
 }
-
 .loading-wrapper {
   display: flex;
   justify-content: center;
   text-align: center;
 }
-
 .hidden_items-popup {
   display: none;
 }
-
 .show_hidden-items {
   display: flex;
   width: 100%;
   justify-content: flex-end;
 }
-
 .edit_item-action {
   margin-right: 5px;
 }
-
 .action_is-visible {
-  display: none;
+  display: none !important;
 }
-
 .justify-between {
   justify-content: space-between;
 }
-
 .filter-main {
   margin-bottom: 10px;
 }
-
 .select-bar {
   margin-left: 10px;
 }
-
 .date_range-picker {
   margin-left: 10px;
 }
-
 .absolute_range-picker {
   position: absolute;
   top: 0;
@@ -1081,7 +937,6 @@ tr:nth-child(even) {
   height: 100%;
   background: transparent;
 }
-
 .close_date-range {
   color: gray;
   cursor: pointer;
@@ -1089,7 +944,6 @@ tr:nth-child(even) {
   margin-left: -18px;
   z-index: 9999;
 }
-
 .vue-daterange-picker {
   font-size: 16px;
   width: 235px;
@@ -1097,20 +951,17 @@ tr:nth-child(even) {
 div.reportrange-text {
   border-radius: 5px !important;
 }
-
 /* .max_str-size {
   max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 } */
-
 .actions-table {
   height: 100%;
   border: none;
   border-top: 1px solid #dddddd;
 }
-
 .dram_table-th {
   cursor: pointer;
 }
