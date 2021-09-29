@@ -60,8 +60,6 @@ export default {
       }
 
       if (!this.count && !this.paginationInfo.limit) {
-        console.log("ok", this.count, "t");
-
         return Math.ceil(this.paginationInfo.count / this.limit);
       }
       return Math.ceil(this.paginationInfo.count / this.paginationInfo.limit);
