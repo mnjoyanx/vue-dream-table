@@ -52,29 +52,43 @@ export default {
   computed: {
     totalPages() {
       if (this.count && this.paginationInfo.limit) {
-        return Math.ceil(this.count / this.paginationInfo.limit); // ??? props is mutable
+        return Math.ceil(this.count / this.paginationInfo.limit[1]);
       }
 
       if (this.count && !this.paginationInfo.limit) {
         return Math.ceil(this.count / this.limit);
       }
 
-      if (!this.count && !this.paginationInfo.limit) {
+      if (!this.count && !this.paginationInfo.limit[1]) {
         return Math.ceil(this.paginationInfo.count / this.limit);
       }
-      return Math.ceil(this.paginationInfo.count / this.paginationInfo.limit);
+      return Math.ceil(
+        this.paginationInfo.count / this.paginationInfo.limit[1]
+      );
     },
   },
 
   methods: {
     pageChangeHandler(selectedPage) {
       this.current = selectedPage;
+      console.log(this.paginationInfo, "key");
+      const pageKey = this.paginationInfo.pageKey
+        ? this.paginationInfo.pageKey
+        : "page";
 
+      console.log(pageKey, "pageKey");
+      console.log(this.paginationInfo, "limitdddd");
+      console.log(this.paginationInfo[pageKey], "this.paginationInfo[pageKey]");
       const info = {
-        currentPage: this.paginationInfo.currentPage || this.current,
-        limit: this.paginationInfo.limit || this.limit,
+        currentPage: this.paginationInfo[pageKey]
+          ? this.paginationInfo[pageKey]
+          : this.current,
+        [this.paginationInfo.limit[0]]:
+          this.paginationInfo.limit[1] || this.limit,
       };
+
       this.$emit("paginate", info);
+      console.log(info, "info");
     },
   },
 };

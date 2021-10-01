@@ -1,4 +1,5 @@
 <h1 align="center">Welcome to vue-dream-table 👋</h1>
+<mark>Spend few minutes to save hours</mark>
 <p>
   <a href="https://www.npmjs.com/package/vue-dream-table" target="_blank">
     <img alt="Version" src="https://img.shields.io/npm/v/vue-dream-table.svg">
@@ -8,7 +9,10 @@
   </a>
 </p>
 
-> Your dream vue js table
+> Vue js dream table is developed to make your life easier. 
+  Only endpoint url and by configuring few options you can get high performanced 
+  table with ton of functionality such as server side pagination, sorting, searching, and filtering.
+  
 
 ### 🏠 [Homepage](https://www.npmjs.com/package/vue-dream-table)
 
@@ -62,8 +66,6 @@ export default {
 }
 </script>
 ```
-
-
 
 ## Props
 
@@ -123,8 +125,23 @@ export default {
           search: {
             placeholder: "Search",
             searchBy: "name",
-            key: "search",
-          }
+          },
+
+          select: {
+            selectBy: "key",
+            optionValue: ["one", "two", "four"],
+          },
+
+          sort: {
+            sortBy: "id",
+            sortOrder: "desc",
+            sortOrderByData: sortData,
+          },
+
+          pagination: {
+            count: 100,
+            limit: 10,
+          },
         }
       }
     }
