@@ -16,7 +16,7 @@
 
 ### 🏠 [Homepage](https://www.npmjs.com/package/vue-dream-table)
 
-### ✨ [Demo](https://www.npmjs.com/package/vue-dream-table)
+<!-- ### ✨ [Demo](https://www.npmjs.com/package/vue-dream-table) -->
 
 ## Install
 
@@ -125,22 +125,24 @@ export default {
           search: {
             placeholder: "Search",
             searchBy: "name",
+            // key: "search", --> search: {[searchBy]: value}
           },
 
-          select: {
+          select: { 
             selectBy: "key",
-            optionValue: ["one", "two", "four"],
+            optionValue: ["one", "two", "three"],
+            // key: "filter", --> filter: {[selectBy]: value} 
           },
 
           sort: {
             sortBy: "id",
             sortOrder: "desc",
-            sortOrderByData: sortData,
           },
 
           pagination: {
             count: 100,
-            limit: 10,
+            limit: ['limit', 10], // [0] -> key, [1] -> value  
+            // pageKey: 'current_page', // default key -> page
           },
         }
       }
@@ -159,6 +161,7 @@ export default {
 ```sh
 <template>
     <vue-dream-table :options="options"
+       @beforeDataRecive="beforeDataRecive"   
        @dataReceivedHandler="dataReceivedHandler"
        @getDataFailureHandler="getDataFailureHandler"
        @createdHandler="createdHandler"

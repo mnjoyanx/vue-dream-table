@@ -71,14 +71,10 @@ export default {
   methods: {
     pageChangeHandler(selectedPage) {
       this.current = selectedPage;
-      console.log(this.paginationInfo, "key");
       const pageKey = this.paginationInfo.pageKey
         ? this.paginationInfo.pageKey
         : "page";
 
-      console.log(pageKey, "pageKey");
-      console.log(this.paginationInfo, "limitdddd");
-      console.log(this.paginationInfo[pageKey], "this.paginationInfo[pageKey]");
       const info = {
         currentPage: this.paginationInfo[pageKey]
           ? this.paginationInfo[pageKey]
@@ -88,7 +84,6 @@ export default {
       };
 
       this.$emit("paginate", info);
-      console.log(info, "info");
     },
   },
 };
